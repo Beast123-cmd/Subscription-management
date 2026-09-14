@@ -6,6 +6,7 @@
     "validate": "dotenv -e ../../.env.local -- prisma validate --schema prisma/schema.prisma",
     "generate": "dotenv -e ../../.env.local -- prisma generate --schema prisma/schema.prisma",
     "migrate:dev": "dotenv -e ../../.env.local -- prisma migrate dev --schema prisma/schema.prisma",
+    "migrate:deploy": "dotenv -e ../../.env.local -- prisma migrate deploy --schema prisma/schema.prisma",
     "migrate:status": "dotenv -e ../../.env.local -- prisma migrate status --schema prisma/schema.prisma"
   },
   "dependencies": {

@@ -26,6 +26,8 @@ flowchart LR
 
 The API is authoritative for prices, totals, discounts, taxes, subscription transitions, and payment settlement. The browser may preview calculations only.
 
+Neon Auth is provisioned through `neon.ts` for the linked Neon project, but it is not yet an application dependency or replacement for the approved NestJS email/password/JWT design. A future adoption requires an ADR covering identity ownership, session migration, and RBAC integration.
+
 ## Repository shape
 
 ```text

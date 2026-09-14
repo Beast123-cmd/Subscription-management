@@ -4,6 +4,7 @@ dist/
 .env
 .env.*
 !.env.example
+.neon
 .neon/
 coverage/
 *.tsbuildinfo

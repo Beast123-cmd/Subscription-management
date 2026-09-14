@@ -25,6 +25,8 @@ The setup script verifies Node.js and pnpm, installs the exact lockfile dependen
 
 Neon is the shared PostgreSQL service. Docker is not part of the initial developer workflow.
 
+The repository's `neon.ts` declares Neon Auth as enabled for the linked project. This provisions the managed service and its environment variables; the application continues to use the approved NestJS email/password/JWT authentication design until a separate ADR explicitly adopts Neon Auth in application code.
+
 | Environment        | Neon branch             | Purpose                                    | Who may migrate                           |
 | ------------------ | ----------------------- | ------------------------------------------ | ----------------------------------------- |
 | Feature work       | Personal/feature branch | Isolated development and migration testing | Branch owner                              |
@@ -57,6 +59,7 @@ The `packages/database` workspace owns the Prisma schema and migration history. 
 pnpm db:validate  # validate the schema and required connection variables
 pnpm db:status    # inspect migration state for the active Neon branch
 pnpm db:migrate   # create/apply a reviewed development migration
+pnpm db:deploy    # apply committed migrations to a shared/production branch
 pnpm db:generate  # generate Prisma Client after a model exists
 ```
 
@@ -72,6 +75,8 @@ At this phase the Prisma schema intentionally has no models. The first model/mig
 6. Apply approved migrations to the shared development branch with the direct URL.
 
 The `.neon` project-link file and local environment files are environment configuration and remain git-ignored unless the team deliberately adopts a safe shared Neon configuration file.
+
+`neon.ts` is committed configuration. Run `neon config plan` before changing it and `neon deploy` only after the plan is reviewed. It reconciles Neon services for the currently linked branch and refreshes local ignored environment variables.
 
 ## Migration discipline
 
