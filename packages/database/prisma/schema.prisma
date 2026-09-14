@@ -49,6 +49,23 @@ enum AddressType {
 
 enum OrganizationSequenceType {
   CUSTOMER
+  SUBSCRIPTION
+}
+
+enum SubscriptionStatus {
+  DRAFT
+  CONFIRMED
+  ACTIVE
+  PAUSED
+  CANCELLED
+  EXPIRED
+  CLOSED
+}
+
+enum SubscriptionAmendmentType {
+  PAUSED
+  RESUMED
+  CANCELLED
 }
 
 enum ProductType {
@@ -105,6 +122,7 @@ model Organization {
   sequences           OrganizationSequence[]
   products            Product[]
   plans               Plan[]
+  subscriptions       Subscription[]
 
   @@map("organizations")
 }
@@ -213,6 +231,7 @@ model Customer {
   organization        Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   contacts            CustomerContact[]
   addresses           CustomerAddress[]
+  subscriptions       Subscription[]
 
   @@unique([organizationId, customerNumber])
   @@unique([organizationId, id])
@@ -361,6 +380,7 @@ model Plan {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   items PlanItem[]
   prices PlanPrice[]
+  subscriptions Subscription[]
   @@unique([organizationId, planCode])
   @@unique([organizationId, id])
   @@index([organizationId, status, createdAt])
@@ -398,4 +418,75 @@ model PlanPrice {
   plan Plan @relation(fields: [organizationId, planId], references: [organizationId, id], onDelete: Restrict)
   @@index([organizationId, planId, currencyCode, billingPeriod, effectiveFrom])
   @@map("plan_prices")
+}
+
+model Subscription {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  subscriptionNumber String @map("subscription_number") @db.VarChar(64)
+  customerId String @map("customer_id") @db.Uuid
+  planId String @map("plan_id") @db.Uuid
+  status SubscriptionStatus @default(DRAFT)
+  startDate DateTime @map("start_date") @db.Date
+  expirationDate DateTime? @map("expiration_date") @db.Date
+  billingStartDate DateTime @map("billing_start_date") @db.Date
+  currencyCode String @map("currency_code") @db.Char(3)
+  paymentTerms String? @map("payment_terms") @db.VarChar(100)
+  autoRenew Boolean @default(true) @map("auto_renew")
+  currentPeriodStart DateTime? @map("current_period_start") @db.Date
+  currentPeriodEnd DateTime? @map("current_period_end") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  customer Customer @relation(fields:[organizationId,customerId],references:[organizationId,id],onDelete:Restrict)
+  plan Plan @relation(fields:[organizationId,planId],references:[organizationId,id],onDelete:Restrict)
+  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
+  items SubscriptionItem[]
+  events SubscriptionEvent[]
+  amendments SubscriptionAmendment[]
+  @@unique([organizationId,subscriptionNumber])
+  @@unique([organizationId,id])
+  @@index([organizationId,status,createdAt])
+  @@map("subscriptions")
+}
+
+model SubscriptionItem {
+  id String @id @default(uuid()) @db.Uuid
+  subscriptionId String @map("subscription_id") @db.Uuid
+  productId String? @map("product_id") @db.Uuid
+  variantId String? @map("variant_id") @db.Uuid
+  descriptionSnapshot String @map("description_snapshot") @db.VarChar(2000)
+  quantity Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(19,4)
+  currencyCode String @map("currency_code") @db.Char(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  subscription Subscription @relation(fields:[subscriptionId],references:[id],onDelete:Restrict)
+  @@index([subscriptionId])
+  @@map("subscription_items")
+}
+
+model SubscriptionEvent {
+ id String @id @default(uuid()) @db.Uuid
+ organizationId String @map("organization_id") @db.Uuid
+ subscriptionId String @map("subscription_id") @db.Uuid
+ eventType String @map("event_type") @db.VarChar(64)
+ occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+ actorUserId String? @map("actor_user_id") @db.Uuid
+ metadata Json?
+ subscription Subscription @relation(fields:[subscriptionId],references:[id],onDelete:Restrict)
+ @@index([organizationId,subscriptionId,occurredAt])
+ @@map("subscription_events")
+}
+
+model SubscriptionAmendment {
+ id String @id @default(uuid()) @db.Uuid
+ subscriptionId String @map("subscription_id") @db.Uuid
+ amendmentType SubscriptionAmendmentType @map("amendment_type")
+ effectiveAt DateTime @map("effective_at") @db.Timestamptz(6)
+ reason String? @db.VarChar(500)
+ beforeSnapshot Json @map("before_snapshot")
+ afterSnapshot Json @map("after_snapshot")
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ subscription Subscription @relation(fields:[subscriptionId],references:[id],onDelete:Restrict)
+ @@index([subscriptionId,effectiveAt])
+ @@map("subscription_amendments")
 }

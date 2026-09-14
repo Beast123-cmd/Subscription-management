@@ -5,6 +5,7 @@ import { DatabaseModule } from './modules/database/database.module.js';
 import { CustomersModule } from './modules/customers/customers.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { PlansModule } from './modules/plans/plans.module.js';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.js';
 import { HealthController } from './health.controller.js';
 import { OrganizationsModule } from './modules/organizations/organizations.module.js';
 
@@ -16,6 +17,7 @@ import { OrganizationsModule } from './modules/organizations/organizations.modul
     CustomersModule,
     CatalogModule,
     PlansModule,
+    SubscriptionsModule,
   ],
   controllers: [HealthController],
 })
