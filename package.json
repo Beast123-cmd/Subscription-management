@@ -5,6 +5,11 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "setup": "./scripts/setup.sh",
+    "db:validate": "pnpm --filter @subscription-management/database validate",
+    "db:generate": "pnpm --filter @subscription-management/database generate",
+    "db:migrate": "pnpm --filter @subscription-management/database migrate:dev",
+    "db:status": "pnpm --filter @subscription-management/database migrate:status",
     "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",

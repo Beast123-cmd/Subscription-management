@@ -11,6 +11,16 @@ The repository uses one `pnpm` workspace and one committed `pnpm-lock.yaml`.
 - Turborepo runs `lint`, `typecheck`, `test`, and `build` consistently across workspaces.
 - Never commit `node_modules`; manifests and the lockfile reproduce it.
 
+## First-time setup
+
+From the repository root, run:
+
+```bash
+pnpm setup
+```
+
+The setup script verifies Node.js and pnpm, installs the exact lockfile dependencies, and creates `.env.local` from `.env.example` only if it does not already exist. It never overwrites existing local secrets. Supply the required Neon/JWT values before running the applications.
+
 ## Shared environment model
 
 Neon is the shared PostgreSQL service. Docker is not part of the initial developer workflow.
@@ -38,6 +48,19 @@ WEB_ORIGIN=http://localhost:5173
 Actual values belong in a git-ignored `.env.local` or app-specific local env file. Share access through the Neon project and a team password manager or approved secret manager, never through Git, issue comments, chat history, or hard-coded source files.
 
 Use the Neon pooled URL as `DATABASE_URL` for normal application traffic. Use the direct, non-pooled URL as `DATABASE_URL_UNPOOLED` for Prisma migrations, database administration, dumps, and session-dependent operations. Prisma runtime uses the pooled URL; Prisma Migrate uses the direct URL.
+
+## Prisma commands
+
+The `packages/database` workspace owns the Prisma schema and migration history. Run commands from the repository root:
+
+```bash
+pnpm db:validate  # validate the schema and required connection variables
+pnpm db:status    # inspect migration state for the active Neon branch
+pnpm db:migrate   # create/apply a reviewed development migration
+pnpm db:generate  # generate Prisma Client after a model exists
+```
+
+At this phase the Prisma schema intentionally has no models. The first model/migration is Phase 3 identity and tenancy, following the approved database specification. `db:generate` is included for that next phase and will only be used after models are introduced.
 
 ## Neon branch workflow
 

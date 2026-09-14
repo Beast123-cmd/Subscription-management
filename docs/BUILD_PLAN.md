@@ -32,7 +32,7 @@ Verify a fresh install, local startup, API health, web build, API build, lint, a
 
 ## Phases 2–5: platform foundation
 
-Database setup establishes one Prisma-owner package and reproducible migrations. Identity remains intentionally narrow: organization, global user, membership, timestamps, statuses, unique keys, and first-Admin bootstrap. Authentication adds password hashing, JWT lifecycle, and active organization context. RBAC introduces only permissions required by built domains and seeds system permissions/roles deterministically.
+Database setup establishes the `packages/database` Prisma-owner workspace, schema validation, client-generation command, direct versus pooled Neon URL convention, and reproducible migration commands. It contains no business models or migrations. Identity remains intentionally narrow: organization, global user, membership, timestamps, statuses, unique keys, and first-Admin bootstrap. Authentication adds password hashing, JWT lifecycle, and active organization context. RBAC introduces only permissions required by built domains and seeds system permissions/roles deterministically.
 
 ## Domain build playbook
 
