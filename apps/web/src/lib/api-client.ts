@@ -202,7 +202,7 @@ class ApiClient {
   }
 
   async getRefunds(): Promise<PaginatedResponse<Refund>> {
-    throw new ApiError('Refunds are not implemented yet.', 'NOT_IMPLEMENTED', 501);
+    return this.request<PaginatedResponse<Refund>>('/payments/refunds');
   }
 
   // ==========================================

@@ -5,3 +5,4 @@ export const createPaymentSchema = z.object({
   method: z.enum(['BANK_TRANSFER', 'CARD', 'UPI', 'CASH', 'OTHER']),
   reference: z.string().trim().max(255).optional(), notes: z.string().trim().max(2000).optional(),
 });
+export const createRefundSchema = z.object({ paymentId: z.uuid(), amount: money, reason: z.string().trim().min(1).max(500) });

@@ -609,6 +609,7 @@ model Payment {
  method PaymentMethod
  status PaymentStatus @default(SUCCEEDED)
  reference String? @db.VarChar(255)
+ idempotencyKey String @map("idempotency_key") @db.VarChar(128)
  notes String? @db.VarChar(2000)
  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -617,6 +618,7 @@ model Payment {
  invoice Invoice @relation(fields:[invoiceId],references:[id],onDelete:Restrict)
  refunds Refund[]
  @@unique([organizationId,paymentNumber])
+ @@unique([organizationId,idempotencyKey])
  @@index([organizationId,invoiceId,status,receivedAt])
  @@map("payments")
 }
@@ -631,6 +633,7 @@ model Refund {
  currencyCode String @map("currency_code") @db.Char(3)
  status RefundStatus @default(SUCCEEDED)
  reason String? @db.VarChar(500)
+ idempotencyKey String @map("idempotency_key") @db.VarChar(128)
  refundedAt DateTime @default(now()) @map("refunded_at") @db.Timestamptz(6)
  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -638,6 +641,7 @@ model Refund {
  invoice Invoice @relation(fields:[invoiceId],references:[id],onDelete:Restrict)
  payment Payment @relation(fields:[paymentId],references:[id],onDelete:Restrict)
  @@unique([organizationId,refundNumber])
+ @@unique([organizationId,idempotencyKey])
  @@index([organizationId,invoiceId,status,refundedAt])
  @@map("refunds")
 }
