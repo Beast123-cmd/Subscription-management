@@ -21,6 +21,7 @@ This directory is the implementation contract for the Subscription Management / 
 | [ADR 006](decisions/006-catalog-ownership-and-variants.md)            | Catalog ownership, SKU scope, variant attributes, and archival behavior      |
 | [ADR 007](decisions/007-plans-and-effective-pricing.md)               | Plan-level pricing and non-overlapping effective-date intervals              |
 | [ADR 008](decisions/008-subscription-lifecycle-and-snapshots.md)      | Subscription lifecycle, pricing snapshots, and command-based changes         |
+| [ADR 009](decisions/009-invoice-finalization-and-immutability.md)     | Invoice finalization, immutable totals, and controlled voiding                |
 
 ## Governance
 

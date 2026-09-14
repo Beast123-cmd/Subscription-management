@@ -51,6 +51,13 @@ enum OrganizationSequenceType {
   CUSTOMER
   SUBSCRIPTION
   QUOTATION
+  INVOICE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  FINALIZED
+  VOID
 }
 
 enum QuotationStatus {
@@ -134,6 +141,7 @@ model Organization {
   plans               Plan[]
   subscriptions       Subscription[]
   quotations          Quotation[]
+  invoices            Invoice[]
 
   @@map("organizations")
 }
@@ -244,6 +252,7 @@ model Customer {
   addresses           CustomerAddress[]
   subscriptions       Subscription[]
   quotations          Quotation[]
+  invoices            Invoice[]
 
   @@unique([organizationId, customerNumber])
   @@unique([organizationId, id])
@@ -534,4 +543,46 @@ model QuotationItem {
  quotation Quotation @relation(fields:[quotationId],references:[id],onDelete:Restrict)
  @@index([quotationId])
  @@map("quotation_items")
+}
+
+model Invoice {
+ id String @id @default(uuid()) @db.Uuid
+ organizationId String @map("organization_id") @db.Uuid
+ invoiceNumber String @map("invoice_number") @db.VarChar(64)
+ customerId String @map("customer_id") @db.Uuid
+ subscriptionId String? @map("subscription_id") @db.Uuid
+ status InvoiceStatus @default(DRAFT)
+ currencyCode String @map("currency_code") @db.Char(3)
+ issueDate DateTime @map("issue_date") @db.Date
+ dueDate DateTime @map("due_date") @db.Date
+ subtotal Decimal @default(0) @db.Decimal(19,4)
+ discountTotal Decimal @default(0) @map("discount_total") @db.Decimal(19,4)
+ taxTotal Decimal @default(0) @map("tax_total") @db.Decimal(19,4)
+ grandTotal Decimal @default(0) @map("grand_total") @db.Decimal(19,4)
+ finalizedAt DateTime? @map("finalized_at") @db.Timestamptz(6)
+ voidedAt DateTime? @map("voided_at") @db.Timestamptz(6)
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+ organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
+ customer Customer @relation(fields:[organizationId,customerId],references:[organizationId,id],onDelete:Restrict)
+ items InvoiceItem[]
+ @@unique([organizationId,invoiceNumber])
+ @@index([organizationId,status,dueDate])
+ @@map("invoices")
+}
+model InvoiceItem {
+ id String @id @default(uuid()) @db.Uuid
+ invoiceId String @map("invoice_id") @db.Uuid
+ description String @db.VarChar(2000)
+ quantity Int
+ unitPrice Decimal @map("unit_price") @db.Decimal(19,4)
+ discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(19,4)
+ taxAmount Decimal @default(0) @map("tax_amount") @db.Decimal(19,4)
+ lineSubtotal Decimal @default(0) @map("line_subtotal") @db.Decimal(19,4)
+ lineTotal Decimal @default(0) @map("line_total") @db.Decimal(19,4)
+ currencyCode String @map("currency_code") @db.Char(3)
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ invoice Invoice @relation(fields:[invoiceId],references:[id],onDelete:Restrict)
+ @@index([invoiceId])
+ @@map("invoice_items")
 }
