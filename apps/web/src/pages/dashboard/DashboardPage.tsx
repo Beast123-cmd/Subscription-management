@@ -35,6 +35,12 @@ export function DashboardPage() {
     queryFn: () => apiClient.getInvoices(),
   });
 
+  const { data: invoiceSummary, isLoading: isSummaryLoading, isError: isSummaryError } = useQuery({
+    queryKey: ['invoice-summary', activeOrg?.id],
+    queryFn: () => apiClient.getInvoiceSummary(),
+    enabled: Boolean(activeOrg),
+  });
+
   const { data: quotationsData } = useQuery({
     queryKey: ['quotations', activeOrg?.id],
     queryFn: () => apiClient.getQuotations(),
@@ -112,15 +118,21 @@ export function DashboardPage() {
             </div>
           </div>
           <div className="mt-3">
-            {isInvoicesLoading ? (
+            {isSummaryLoading ? (
               <Skeleton className="h-7 w-28" />
+            ) : isSummaryError ? (
+              <span className="text-sm text-rose-700">Unable to load invoice total</span>
             ) : (
               <div className="text-xl font-bold tracking-tight text-slate-900">
-                <CurrencyDisplay amount="1179000.0000" currencyCode={activeOrg?.defaultCurrencyCode} />
+                {invoiceSummary?.totals.map((total) => (
+                  <div key={total.currencyCode}>
+                    <CurrencyDisplay amount={total.amount} currencyCode={total.currencyCode} />
+                  </div>
+                ))}
               </div>
             )}
             <span className="text-[11px] text-slate-400 block mt-0.5">
-              Authoritative ledger totals
+              Finalized invoices issued in {invoiceSummary?.year ?? 'this year'}
             </span>
           </div>
         </div>

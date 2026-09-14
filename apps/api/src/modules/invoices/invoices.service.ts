@@ -21,6 +21,34 @@ export class InvoicesService {
       .findMany({ where: { organizationId: o }, orderBy: { createdAt: 'desc' } })
       .then((data) => ({ data }));
   }
+  async yearlyTotals(o: string) {
+    const organization = await this.p.organization.findUniqueOrThrow({
+      where: { id: o },
+      select: { timezone: true, defaultCurrencyCode: true },
+    });
+    const year = Number(new Intl.DateTimeFormat('en-US', {
+      timeZone: organization.timezone,
+      year: 'numeric',
+    }).format(new Date()));
+    const rows = await this.p.invoice.groupBy({
+      by: ['currencyCode'],
+      where: {
+        organizationId: o,
+        status: 'FINALIZED',
+        issueDate: {
+          gte: new Date(Date.UTC(year, 0, 1)),
+          lt: new Date(Date.UTC(year + 1, 0, 1)),
+        },
+      },
+      _sum: { grandTotal: true },
+    });
+    return {
+      year,
+      totals: rows.length
+        ? rows.map((row) => ({ currencyCode: row.currencyCode, amount: row._sum.grandTotal?.toString() ?? '0' }))
+        : [{ currencyCode: organization.defaultCurrencyCode, amount: '0' }],
+    };
+  }
   async create(o: string, i: Create) {
     if (i.dueDate < i.issueDate) throw new ConflictException('Due date cannot precede issue date.');
     const c = await this.p.customer.findFirst({

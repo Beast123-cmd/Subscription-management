@@ -22,6 +22,11 @@ export class InvoicesController {
   ) {
     return this.i.list(u.activeOrganizationId);
   }
+  @Get('summary') @RequirePermissions('invoice.read') summary(
+    @CurrentUser() u: { activeOrganizationId: string },
+  ) {
+    return this.i.yearlyTotals(u.activeOrganizationId);
+  }
   @Post() @RequirePermissions('invoice.create') create(
     @CurrentUser() u: { activeOrganizationId: string },
     @Body() b: unknown,

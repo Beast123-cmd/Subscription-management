@@ -182,6 +182,13 @@ class ApiClient {
     return this.request<PaginatedResponse<Invoice>>('/invoices');
   }
 
+  async getInvoiceSummary(): Promise<{
+    year: number;
+    totals: Array<{ currencyCode: string; amount: string }>;
+  }> {
+    return this.request('/invoices/summary');
+  }
+
   async getInvoice(id: string): Promise<Invoice> {
     return this.request<Invoice>(`/invoices/${id}`);
   }

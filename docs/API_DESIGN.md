@@ -51,6 +51,8 @@ Standard CRUD applies only to editable resources. Each route requires domain per
 | Payments      | `GET /payments`, `POST /payments`                                                                 |
 | Reports       | `GET /reports/revenue`, `/reports/subscriptions`, `/reports/payments`                             |
 
+`GET /invoices/summary` returns the current organization's finalized, non-void invoice totals for the organization's current calendar year, grouped by currency. The dashboard must not combine different currencies or substitute demo totals when this request fails.
+
 ## Command endpoints
 
 | Endpoint                           | Required outcome                                      |
