@@ -15,11 +15,17 @@ import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Payment } from '@/types';
+import { Input } from '@/components/ui/input';
 
 export function PaymentsListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [formOpen, setFormOpen] = useState(false);
+  const [invoiceId, setInvoiceId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [method, setMethod] = useState('BANK_TRANSFER');
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -118,7 +124,7 @@ export function PaymentsListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Record payment flow ready for Phase 12.', 'Record Payment')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               Record Payment
@@ -126,6 +132,12 @@ export function PaymentsListPage() {
           </Can>
         }
       />
+
+      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); try { await apiClient.createPayment({ invoiceId, amount, method }); toast.success('Payment recorded.', 'Success'); setFormOpen(false); setInvoiceId(''); setAmount(''); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to record payment.', 'Payment failed'); } finally { setSaving(false); } }}>
+        <div className="mb-4 text-sm font-semibold text-slate-900">Record payment</div>
+        <div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Finalized invoice ID" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} /><Input required inputMode="decimal" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} /><select className="h-10 rounded-md border border-slate-300 px-3 text-sm" value={method} onChange={(e) => setMethod(e.target.value)}><option value="BANK_TRANSFER">Bank transfer</option><option value="CARD">Card</option><option value="UPI">UPI</option><option value="CASH">Cash</option><option value="OTHER">Other</option></select></div>
+        <div className="mt-4 flex gap-2"><Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save payment'}</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div>
+      </form>}
 
       <FilterBar
         searchValue={search}

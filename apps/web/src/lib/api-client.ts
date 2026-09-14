@@ -197,6 +197,10 @@ class ApiClient {
     return this.request<PaginatedResponse<Payment>>('/payments');
   }
 
+  async createPayment(input: { invoiceId: string; amount: string; method: string; reference?: string }): Promise<Payment> {
+    return this.request<Payment>('/payments', { method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify(input) });
+  }
+
   async getPayment(id: string): Promise<Payment> {
     return this.request<Payment>(`/payments/${id}`);
   }
