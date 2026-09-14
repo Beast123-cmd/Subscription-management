@@ -51,6 +51,16 @@ enum OrganizationSequenceType {
   CUSTOMER
 }
 
+enum ProductType {
+  GOODS
+  SERVICE
+}
+
+enum ProductStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model Permission {
   id              String           @id @default(uuid()) @db.Uuid
   resource        String           @db.VarChar(64)
@@ -77,6 +87,7 @@ model Organization {
   roles               Role[]
   customers           Customer[]
   sequences           OrganizationSequence[]
+  products            Product[]
 
   @@map("organizations")
 }
@@ -227,4 +238,86 @@ model CustomerAddress {
 
   @@index([customerId, addressType])
   @@map("customer_addresses")
+}
+
+model Product {
+  id               String        @id @default(uuid()) @db.Uuid
+  organizationId   String        @map("organization_id") @db.Uuid
+  productCode      String        @map("product_code") @db.VarChar(64)
+  name             String        @db.VarChar(160)
+  description      String?       @db.VarChar(2000)
+  productType      ProductType   @map("product_type")
+  costPrice        Decimal       @default(0) @map("cost_price") @db.Decimal(19, 4)
+  costCurrencyCode String        @map("cost_currency_code") @db.Char(3)
+  status           ProductStatus @default(ACTIVE)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  variants         ProductVariant[]
+  attributes       ProductAttribute[]
+
+  @@unique([organizationId, productCode])
+  @@unique([organizationId, id])
+  @@index([organizationId, status, createdAt])
+  @@map("products")
+}
+
+model ProductVariant {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  productId      String        @map("product_id") @db.Uuid
+  sku            String        @db.VarChar(100)
+  name           String        @db.VarChar(160)
+  description    String?       @db.VarChar(2000)
+  status         ProductStatus @default(ACTIVE)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  product        Product       @relation(fields: [organizationId, productId], references: [organizationId, id], onDelete: Restrict)
+  attributeValues ProductVariantAttributeValue[]
+
+  @@unique([organizationId, sku])
+  @@unique([organizationId, id])
+  @@index([organizationId, productId, status])
+  @@map("product_variants")
+}
+
+model ProductAttribute {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  productId      String        @map("product_id") @db.Uuid
+  name           String        @db.VarChar(100)
+  code           String        @db.VarChar(64)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  product        Product       @relation(fields: [organizationId, productId], references: [organizationId, id], onDelete: Restrict)
+  values         ProductAttributeValue[]
+
+  @@unique([productId, code])
+  @@unique([organizationId, id])
+  @@index([organizationId, productId])
+  @@map("product_attributes")
+}
+
+model ProductAttributeValue {
+  id                String                         @id @default(uuid()) @db.Uuid
+  attributeId       String                         @map("attribute_id") @db.Uuid
+  value             String                         @db.VarChar(100)
+  createdAt         DateTime                       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime                       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  attribute         ProductAttribute               @relation(fields: [attributeId], references: [id], onDelete: Restrict)
+  variantAttributes ProductVariantAttributeValue[]
+
+  @@unique([attributeId, value])
+  @@map("product_attribute_values")
+}
+
+model ProductVariantAttributeValue {
+  variantId        String                @map("variant_id") @db.Uuid
+  attributeValueId String                @map("attribute_value_id") @db.Uuid
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  variant          ProductVariant        @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  attributeValue   ProductAttributeValue @relation(fields: [attributeValueId], references: [id], onDelete: Restrict)
+
+  @@id([variantId, attributeValueId])
+  @@map("product_variant_attribute_values")
 }
