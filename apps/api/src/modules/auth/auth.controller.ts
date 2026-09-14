@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, BadRequestException, Inject } from '@nestjs/common';
 import { z } from 'zod';
 
 import { AuthService } from './auth.service.js';
@@ -9,7 +9,7 @@ const loginSchema = z.object({ email: z.email(), password: z.string().min(8).max
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(@Inject(AuthService) private readonly auth: AuthService) {}
 
   @Post('login')
   async login(@Body() body: unknown) {
