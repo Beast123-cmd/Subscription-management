@@ -12,6 +12,9 @@ const permissions = [
   ['product', 'read', 'product.read'],
   ['product', 'create', 'product.create'],
   ['product', 'update', 'product.update'],
+  ['plan', 'read', 'plan.read'],
+  ['plan', 'create', 'plan.create'],
+  ['plan', 'update', 'plan.update'],
 ] as const;
 
 const prisma = new PrismaClient();
@@ -74,7 +77,7 @@ try {
         );
       }
     }
-  });
+  }, { timeout: 20_000 });
 
   console.log('RBAC seed complete.');
 } finally {

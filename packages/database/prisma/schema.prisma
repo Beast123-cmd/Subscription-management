@@ -61,6 +61,22 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum PlanStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum BillingPeriod {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum PlanPriceStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model Permission {
   id              String           @id @default(uuid()) @db.Uuid
   resource        String           @db.VarChar(64)
@@ -88,6 +104,7 @@ model Organization {
   customers           Customer[]
   sequences           OrganizationSequence[]
   products            Product[]
+  plans               Plan[]
 
   @@map("organizations")
 }
@@ -255,6 +272,7 @@ model Product {
   organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   variants         ProductVariant[]
   attributes       ProductAttribute[]
+  planItems        PlanItem[]
 
   @@unique([organizationId, productCode])
   @@unique([organizationId, id])
@@ -274,6 +292,7 @@ model ProductVariant {
   updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
   product        Product       @relation(fields: [organizationId, productId], references: [organizationId, id], onDelete: Restrict)
   attributeValues ProductVariantAttributeValue[]
+  planItems       PlanItem[]
 
   @@unique([organizationId, sku])
   @@unique([organizationId, id])
@@ -320,4 +339,63 @@ model ProductVariantAttributeValue {
 
   @@id([variantId, attributeValueId])
   @@map("product_variant_attribute_values")
+}
+
+model Plan {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  planCode String @map("plan_code") @db.VarChar(64)
+  name String @db.VarChar(160)
+  description String? @db.VarChar(2000)
+  status PlanStatus @default(ACTIVE)
+  minimumQuantity Int @default(1) @map("minimum_quantity")
+  maximumQuantity Int? @map("maximum_quantity")
+  startsAt DateTime? @map("starts_at") @db.Date
+  endsAt DateTime? @map("ends_at") @db.Date
+  autoClose Boolean @default(false) @map("auto_close")
+  closable Boolean @default(true)
+  pausable Boolean @default(true)
+  renewable Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  items PlanItem[]
+  prices PlanPrice[]
+  @@unique([organizationId, planCode])
+  @@unique([organizationId, id])
+  @@index([organizationId, status, createdAt])
+  @@map("plans")
+}
+
+model PlanItem {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  planId String @map("plan_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
+  variantId String? @map("variant_id") @db.Uuid
+  quantity Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  plan Plan @relation(fields: [organizationId, planId], references: [organizationId, id], onDelete: Restrict)
+  product Product @relation(fields: [organizationId, productId], references: [organizationId, id], onDelete: Restrict)
+  variant ProductVariant? @relation(fields: [organizationId, variantId], references: [organizationId, id], onDelete: Restrict)
+  @@index([organizationId, planId])
+  @@map("plan_items")
+}
+
+model PlanPrice {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  planId String @map("plan_id") @db.Uuid
+  currencyCode String @map("currency_code") @db.Char(3)
+  billingPeriod BillingPeriod @map("billing_period")
+  amount Decimal @db.Decimal(19, 4)
+  effectiveFrom DateTime @map("effective_from") @db.Date
+  effectiveUntil DateTime? @map("effective_until") @db.Date
+  status PlanPriceStatus @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  plan Plan @relation(fields: [organizationId, planId], references: [organizationId, id], onDelete: Restrict)
+  @@index([organizationId, planId, currencyCode, billingPeriod, effectiveFrom])
+  @@map("plan_prices")
 }

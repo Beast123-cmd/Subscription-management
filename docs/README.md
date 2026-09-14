@@ -19,6 +19,7 @@ This directory is the implementation contract for the Subscription Management / 
 | [ADR 004](decisions/004-tenant-scoped-rbac.md)                        | Tenant-local roles, live permission checks, and bootstrap Admin seeding      |
 | [ADR 005](decisions/005-customer-records-and-numbering.md)            | Customer ownership, archival policy, defaults, and tenant numbering          |
 | [ADR 006](decisions/006-catalog-ownership-and-variants.md)            | Catalog ownership, SKU scope, variant attributes, and archival behavior      |
+| [ADR 007](decisions/007-plans-and-effective-pricing.md)               | Plan-level pricing and non-overlapping effective-date intervals              |
 
 ## Governance
 

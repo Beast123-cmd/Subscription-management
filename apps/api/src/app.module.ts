@@ -4,11 +4,19 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { DatabaseModule } from './modules/database/database.module.js';
 import { CustomersModule } from './modules/customers/customers.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
+import { PlansModule } from './modules/plans/plans.module.js';
 import { HealthController } from './health.controller.js';
 import { OrganizationsModule } from './modules/organizations/organizations.module.js';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, OrganizationsModule, CustomersModule, CatalogModule],
+  imports: [
+    DatabaseModule,
+    AuthModule,
+    OrganizationsModule,
+    CustomersModule,
+    CatalogModule,
+    PlansModule,
+  ],
   controllers: [HealthController],
 })
 export class AppModule {}
