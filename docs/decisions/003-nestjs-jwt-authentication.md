@@ -6,7 +6,7 @@ Neon Auth is provisioned on the Neon project, but the approved application archi
 
 ## Decision
 
-The application uses NestJS with bcrypt password hashes and short-lived JWT access tokens. `User` remains the global platform identity. Login returns a JWT with only the user subject; selecting an active organization verifies an active membership and returns a replacement JWT with `activeOrganizationId`.
+The application uses NestJS with bcrypt password hashes and one-hour JWT access tokens. `User` remains the global platform identity. Login returns a JWT with only the user subject; selecting an active organization verifies an active membership and returns a replacement JWT with `activeOrganizationId`. Both tokens expire one hour after issuance; selection starts a new one-hour lifetime.
 
 Every tenant-scoped route uses the JWT guard plus `TenantGuard`. The guard checks the current active membership and organization status in PostgreSQL; JWT claims are not sufficient authorization. Neon Auth remains provisioned but unused by application code.
 

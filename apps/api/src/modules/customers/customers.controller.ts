@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
+import { Inject } from '@nestjs/common';
 
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
@@ -40,7 +41,7 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
 @Controller('customers')
 export class CustomersController {
-  constructor(private readonly customers: CustomersService) {}
+  constructor(@Inject(CustomersService) private readonly customers: CustomersService) {}
 
   @Get()
   @RequirePermissions('customer.read')

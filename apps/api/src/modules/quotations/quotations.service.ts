@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { Prisma } from '@subscription-management/database';
 import type { z } from 'zod';
 import { PrismaService } from '../database/prisma.service.js';
@@ -6,7 +6,7 @@ import type { createQuotationSchema } from './quotations.schemas.js';
 type Create = z.infer<typeof createQuotationSchema>;
 @Injectable()
 export class QuotationsService {
-  constructor(private readonly p: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly p: PrismaService) {}
   list(org: string) {
     return this.p.quotation
       .findMany({ where: { organizationId: org }, orderBy: { createdAt: 'desc' } })

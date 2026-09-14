@@ -7,6 +7,7 @@ import { RequirePermissions } from '../auth/require-permissions.decorator.js';
 import { TenantGuard } from '../auth/tenant.guard.js';
 import { createSubscriptionSchema, reasonSchema } from './subscriptions.schemas.js';
 import { SubscriptionsService } from './subscriptions.service.js';
+import { Inject } from '@nestjs/common';
 function parse<T>(s: z.ZodType<T>, v: unknown): T {
   const r = s.safeParse(v);
   if (!r.success) throw new BadRequestException(r.error.flatten());
@@ -15,7 +16,7 @@ function parse<T>(s: z.ZodType<T>, v: unknown): T {
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
 @Controller('subscriptions')
 export class SubscriptionsController {
-  constructor(private readonly s: SubscriptionsService) {}
+  constructor(@Inject(SubscriptionsService) private readonly s: SubscriptionsService) {}
   @Get() @RequirePermissions('subscription.read') list(
     @CurrentUser() u: { activeOrganizationId: string },
   ) {

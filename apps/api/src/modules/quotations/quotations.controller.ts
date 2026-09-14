@@ -7,6 +7,7 @@ import { RequirePermissions } from '../auth/require-permissions.decorator.js';
 import { TenantGuard } from '../auth/tenant.guard.js';
 import { createQuotationSchema } from './quotations.schemas.js';
 import { QuotationsService } from './quotations.service.js';
+import { Inject } from '@nestjs/common';
 function parse<T>(s: z.ZodType<T>, v: unknown): T {
   const r = s.safeParse(v);
   if (!r.success) throw new BadRequestException(r.error.flatten());
@@ -15,7 +16,7 @@ function parse<T>(s: z.ZodType<T>, v: unknown): T {
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
 @Controller('quotations')
 export class QuotationsController {
-  constructor(private readonly q: QuotationsService) {}
+  constructor(@Inject(QuotationsService) private readonly q: QuotationsService) {}
   @Get() @RequirePermissions('quotation.read') list(
     @CurrentUser() u: { activeOrganizationId: string },
   ) {

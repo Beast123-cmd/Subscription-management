@@ -27,6 +27,7 @@ import {
   updateVariantSchema,
 } from './catalog.schemas.js';
 import { CatalogService } from './catalog.service.js';
+import { Inject } from '@nestjs/common';
 
 const listSchema = z.object({
   cursor: z.string().min(1).optional(),
@@ -41,7 +42,7 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
 @Controller('products')
 export class CatalogController {
-  constructor(private readonly catalog: CatalogService) {}
+  constructor(@Inject(CatalogService) private readonly catalog: CatalogService) {}
 
   @Get()
   @RequirePermissions('product.read')

@@ -1,11 +1,11 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Inject } from '@nestjs/common';
 import type { z } from 'zod';
 import { PrismaService } from '../database/prisma.service.js';
 import type { createSubscriptionSchema } from './subscriptions.schemas.js';
 type Create = z.infer<typeof createSubscriptionSchema>;
 @Injectable()
 export class SubscriptionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
   async find(org: string, id: string) {
     const s = await this.prisma.subscription.findFirst({
       where: { id, organizationId: org },

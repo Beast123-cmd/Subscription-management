@@ -21,6 +21,7 @@ import {
   updatePlanSchema,
 } from './plans.schemas.js';
 import { PlansService } from './plans.service.js';
+import { Inject } from '@nestjs/common';
 function parse<T>(s: z.ZodType<T>, v: unknown): T {
   const r = s.safeParse(v);
   if (!r.success) throw new BadRequestException(r.error.flatten());
@@ -29,7 +30,7 @@ function parse<T>(s: z.ZodType<T>, v: unknown): T {
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
 @Controller('plans')
 export class PlansController {
-  constructor(private readonly plans: PlansService) {}
+  constructor(@Inject(PlansService) private readonly plans: PlansService) {}
   @Get() @RequirePermissions('plan.read') list(@CurrentUser() u: { activeOrganizationId: string }) {
     return this.plans.list(u.activeOrganizationId);
   }

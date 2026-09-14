@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
 
@@ -7,8 +7,8 @@ import { PrismaService } from '../database/prisma.service.js';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly jwt: JwtService,
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(JwtService) private readonly jwt: JwtService,
   ) {}
 
   async login(email: string, password: string) {
@@ -35,6 +35,9 @@ export class AuthService {
         id: organization.id,
         name: organization.name,
         slug: organization.slug,
+        defaultCurrencyCode: organization.defaultCurrencyCode,
+        timezone: organization.timezone,
+        status: organization.status,
       })),
     };
   }
@@ -60,6 +63,9 @@ export class AuthService {
         id: organization.id,
         name: organization.name,
         slug: organization.slug,
+        defaultCurrencyCode: organization.defaultCurrencyCode,
+        timezone: organization.timezone,
+        status: organization.status,
       })),
     };
   }
@@ -76,6 +82,38 @@ export class AuthService {
       accessToken: await this.sign(userId, membership.organizationId),
       activeOrganizationId: membership.organizationId,
     };
+  }
+
+  listMembers(organizationId: string) {
+    return this.prisma.organizationMembership.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        status: true,
+        joinedAt: true,
+        user: { select: { id: true, email: true, firstName: true, lastName: true, status: true, lastLoginAt: true } },
+        roles: { select: { role: { select: { id: true, name: true, code: true } } } },
+      },
+    }).then((data) => ({ data }));
+  }
+
+  listRoles(organizationId: string) {
+    return this.prisma.role.findMany({
+      where: { organizationId },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        organizationId: true,
+        name: true,
+        code: true,
+        description: true,
+        isSystem: true,
+        _count: { select: { permissions: true } },
+      },
+    }).then((roles) => ({
+      data: roles.map(({ _count, ...role }) => ({ ...role, permissionsCount: _count.permissions })),
+    }));
   }
 
   private sign(userId: string, activeOrganizationId?: string) {

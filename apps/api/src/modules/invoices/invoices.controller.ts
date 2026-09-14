@@ -7,6 +7,7 @@ import { RequirePermissions } from '../auth/require-permissions.decorator.js';
 import { TenantGuard } from '../auth/tenant.guard.js';
 import { createInvoiceSchema, lineSchema } from './invoices.schemas.js';
 import { InvoicesService } from './invoices.service.js';
+import { Inject } from '@nestjs/common';
 function parse<T>(s: z.ZodType<T>, v: unknown): T {
   const r = s.safeParse(v);
   if (!r.success) throw new BadRequestException(r.error.flatten());
@@ -15,11 +16,16 @@ function parse<T>(s: z.ZodType<T>, v: unknown): T {
 @UseGuards(JwtAuthGuard, TenantGuard, PermissionGuard)
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly i: InvoicesService) {}
+  constructor(@Inject(InvoicesService) private readonly i: InvoicesService) {}
   @Get() @RequirePermissions('invoice.read') list(
     @CurrentUser() u: { activeOrganizationId: string },
   ) {
     return this.i.list(u.activeOrganizationId);
+  }
+  @Get('summary') @RequirePermissions('invoice.read') summary(
+    @CurrentUser() u: { activeOrganizationId: string },
+  ) {
+    return this.i.yearlyTotals(u.activeOrganizationId);
   }
   @Post() @RequirePermissions('invoice.create') create(
     @CurrentUser() u: { activeOrganizationId: string },

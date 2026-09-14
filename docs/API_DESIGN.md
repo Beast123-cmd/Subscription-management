@@ -32,7 +32,7 @@ List responses use `limit`, opaque `cursor`, allow-listed filters/sort, and stab
 | `GET /api/organizations`             | Organizations available to the user                       |
 | `POST /api/organizations/:id/select` | Select an authorized active organization                  |
 
-Active organization is encoded in a newly issued short-lived JWT after selection. Tenant guards verify that token claim against the current active membership and organization in PostgreSQL on every tenant-scoped request; the claim alone never grants access.
+Active organization is encoded in a newly issued one-hour JWT after selection. Tenant guards verify that token claim against the current active membership and organization in PostgreSQL on every tenant-scoped request; the claim alone never grants access.
 
 Permission grants are also read from PostgreSQL on every protected request. Routes declare required codes such as `customer.read` or `customer.create`; roles are tenant-local and are assigned to memberships. Role and permission claims are intentionally absent from the JWT, so membership revocations and grant changes apply immediately.
 
@@ -50,6 +50,8 @@ Standard CRUD applies only to editable resources. Each route requires domain per
 | Invoices      | `GET/POST /invoices`, `GET /invoices/:id`                                                         |
 | Payments      | `GET /payments`, `POST /payments`                                                                 |
 | Reports       | `GET /reports/revenue`, `/reports/subscriptions`, `/reports/payments`                             |
+
+`GET /invoices/summary` returns the current organization's finalized, non-void invoice totals for the organization's current calendar year, grouped by currency. The dashboard must not combine different currencies or substitute demo totals when this request fails.
 
 ## Command endpoints
 

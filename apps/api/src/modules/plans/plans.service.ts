@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Inject } from '@nestjs/common';
 import type { z } from 'zod';
 import { PrismaService } from '../database/prisma.service.js';
 import type {
@@ -13,7 +13,7 @@ type Item = z.infer<typeof createItemSchema>;
 type Price = z.infer<typeof createPriceSchema>;
 @Injectable()
 export class PlansService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
   async find(org: string, id: string) {
     const plan = await this.prisma.plan.findFirst({ where: { id, organizationId: org } });
     if (!plan) throw new NotFoundException('Plan not found.');

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { Prisma } from '@subscription-management/database';
 import type { z } from 'zod';
 
@@ -36,7 +36,7 @@ const productSelect = {
 
 @Injectable()
 export class CatalogService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async listProducts(organizationId: string, cursor?: string, status?: 'ACTIVE' | 'ARCHIVED') {
     const id = cursor && this.decodeCursor(cursor);
