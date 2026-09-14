@@ -50,6 +50,16 @@ enum AddressType {
 enum OrganizationSequenceType {
   CUSTOMER
   SUBSCRIPTION
+  QUOTATION
+}
+
+enum QuotationStatus {
+  DRAFT
+  ISSUED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
 }
 
 enum SubscriptionStatus {
@@ -123,6 +133,7 @@ model Organization {
   products            Product[]
   plans               Plan[]
   subscriptions       Subscription[]
+  quotations          Quotation[]
 
   @@map("organizations")
 }
@@ -232,6 +243,7 @@ model Customer {
   contacts            CustomerContact[]
   addresses           CustomerAddress[]
   subscriptions       Subscription[]
+  quotations          Quotation[]
 
   @@unique([organizationId, customerNumber])
   @@unique([organizationId, id])
@@ -489,4 +501,37 @@ model SubscriptionAmendment {
  subscription Subscription @relation(fields:[subscriptionId],references:[id],onDelete:Restrict)
  @@index([subscriptionId,effectiveAt])
  @@map("subscription_amendments")
+}
+
+model Quotation {
+ id String @id @default(uuid()) @db.Uuid
+ organizationId String @map("organization_id") @db.Uuid
+ quotationNumber String @map("quotation_number") @db.VarChar(64)
+ customerId String @map("customer_id") @db.Uuid
+ status QuotationStatus @default(DRAFT)
+ issueDate DateTime? @map("issue_date") @db.Date
+ validUntil DateTime @map("valid_until") @db.Date
+ currencyCode String @map("currency_code") @db.Char(3)
+ subtotal Decimal @default(0) @db.Decimal(19,4)
+ grandTotal Decimal @default(0) @map("grand_total") @db.Decimal(19,4)
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+ organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
+ customer Customer @relation(fields:[organizationId,customerId],references:[organizationId,id],onDelete:Restrict)
+ items QuotationItem[]
+ @@unique([organizationId,quotationNumber])
+ @@index([organizationId,status,createdAt])
+ @@map("quotations")
+}
+model QuotationItem {
+ id String @id @default(uuid()) @db.Uuid
+ quotationId String @map("quotation_id") @db.Uuid
+ description String @db.VarChar(2000)
+ quantity Int
+ unitPrice Decimal @map("unit_price") @db.Decimal(19,4)
+ lineTotal Decimal @map("line_total") @db.Decimal(19,4)
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ quotation Quotation @relation(fields:[quotationId],references:[id],onDelete:Restrict)
+ @@index([quotationId])
+ @@map("quotation_items")
 }

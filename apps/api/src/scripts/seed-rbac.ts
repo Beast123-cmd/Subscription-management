@@ -18,6 +18,9 @@ const permissions = [
   ['subscription', 'read', 'subscription.read'],
   ['subscription', 'create', 'subscription.create'],
   ['subscription', 'update', 'subscription.update'],
+  ['quotation', 'read', 'quotation.read'],
+  ['quotation', 'create', 'quotation.create'],
+  ['quotation', 'update', 'quotation.update'],
 ] as const;
 
 const prisma = new PrismaClient();
