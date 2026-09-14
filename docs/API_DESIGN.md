@@ -40,16 +40,16 @@ Permission grants are also read from PostgreSQL on every protected request. Rout
 
 Standard CRUD applies only to editable resources. Each route requires domain permission and scopes data to the active organization.
 
-| Resource      | Initial routes                                                        |
-| ------------- | --------------------------------------------------------------------- |
-| Customers     | `GET/POST /customers`, `GET/PATCH /customers/:id`                     |
-| Products      | `GET/POST /products`, `GET/PATCH /products/:id`                       |
-| Plans         | `GET/POST /plans`, `GET/PATCH /plans/:id`, `POST /plans/:id/prices`   |
-| Subscriptions | `GET/POST /subscriptions`, `GET /subscriptions/:id`                   |
-| Quotations    | `GET/POST /quotations`, `GET /quotations/:id`                         |
-| Invoices      | `GET/POST /invoices`, `GET /invoices/:id`                             |
-| Payments      | `GET /payments`, `POST /payments`                                     |
-| Reports       | `GET /reports/revenue`, `/reports/subscriptions`, `/reports/payments` |
+| Resource      | Initial routes                                                                      |
+| ------------- | ----------------------------------------------------------------------------------- |
+| Customers     | `GET/POST /customers`, `GET/PATCH /customers/:id`, archive and contact/address CRUD |
+| Products      | `GET/POST /products`, `GET/PATCH /products/:id`                                     |
+| Plans         | `GET/POST /plans`, `GET/PATCH /plans/:id`, `POST /plans/:id/prices`                 |
+| Subscriptions | `GET/POST /subscriptions`, `GET /subscriptions/:id`                                 |
+| Quotations    | `GET/POST /quotations`, `GET /quotations/:id`                                       |
+| Invoices      | `GET/POST /invoices`, `GET /invoices/:id`                                           |
+| Payments      | `GET /payments`, `POST /payments`                                                   |
+| Reports       | `GET /reports/revenue`, `/reports/subscriptions`, `/reports/payments`               |
 
 ## Command endpoints
 

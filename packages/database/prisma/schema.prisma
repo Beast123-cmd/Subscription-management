@@ -26,6 +26,31 @@ enum MembershipStatus {
   REVOKED
 }
 
+enum CustomerType {
+  BUSINESS
+  INDIVIDUAL
+}
+
+enum CustomerStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum CustomerContactStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+  OTHER
+}
+
+enum OrganizationSequenceType {
+  CUSTOMER
+}
+
 model Permission {
   id              String           @id @default(uuid()) @db.Uuid
   resource        String           @db.VarChar(64)
@@ -50,6 +75,8 @@ model Organization {
   updatedAt           DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(6)
   memberships         OrganizationMembership[]
   roles               Role[]
+  customers           Customer[]
+  sequences           OrganizationSequence[]
 
   @@map("organizations")
 }
@@ -128,4 +155,76 @@ model RolePermission {
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
+}
+
+model OrganizationSequence {
+  organizationId String                   @map("organization_id") @db.Uuid
+  sequenceType   OrganizationSequenceType @map("sequence_type")
+  nextValue      BigInt                   @default(0) @map("next_value")
+  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization   Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@id([organizationId, sequenceType])
+  @@map("organization_sequences")
+}
+
+model Customer {
+  id                  String         @id @default(uuid()) @db.Uuid
+  organizationId      String         @map("organization_id") @db.Uuid
+  customerNumber      String         @map("customer_number") @db.VarChar(64)
+  customerType        CustomerType   @map("customer_type")
+  legalName           String         @map("legal_name") @db.VarChar(160)
+  displayName         String         @map("display_name") @db.VarChar(160)
+  email               String?        @db.VarChar(320)
+  phone               String?        @db.VarChar(40)
+  taxIdentifier       String?        @map("tax_identifier") @db.VarChar(100)
+  defaultCurrencyCode String         @map("default_currency_code") @db.Char(3)
+  status              CustomerStatus @default(ACTIVE)
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization        Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  contacts            CustomerContact[]
+  addresses           CustomerAddress[]
+
+  @@unique([organizationId, customerNumber])
+  @@unique([organizationId, id])
+  @@index([organizationId, status, createdAt])
+  @@map("customers")
+}
+
+model CustomerContact {
+  id          String                @id @default(uuid()) @db.Uuid
+  customerId  String                @map("customer_id") @db.Uuid
+  firstName   String                @map("first_name") @db.VarChar(100)
+  lastName    String                @map("last_name") @db.VarChar(100)
+  email       String?               @db.VarChar(320)
+  phone       String?               @db.VarChar(40)
+  jobTitle    String?               @map("job_title") @db.VarChar(100)
+  isPrimary   Boolean               @default(false) @map("is_primary")
+  status      CustomerContactStatus @default(ACTIVE)
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  customer    Customer              @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([customerId, status])
+  @@map("customer_contacts")
+}
+
+model CustomerAddress {
+  id          String      @id @default(uuid()) @db.Uuid
+  customerId  String      @map("customer_id") @db.Uuid
+  addressType AddressType @map("address_type")
+  addressLine1 String     @map("address_line_1") @db.VarChar(160)
+  addressLine2 String?    @map("address_line_2") @db.VarChar(160)
+  city        String      @db.VarChar(100)
+  state       String?     @db.VarChar(100)
+  postalCode  String?     @map("postal_code") @db.VarChar(32)
+  countryCode String      @map("country_code") @db.Char(2)
+  isDefault   Boolean     @default(false) @map("is_default")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([customerId, addressType])
+  @@map("customer_addresses")
 }

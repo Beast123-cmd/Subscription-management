@@ -17,6 +17,7 @@ This directory is the implementation contract for the Subscription Management / 
 | [ADR 002](decisions/002-identity-tenancy-bootstrap.md)                | Identity normalization, tenant membership, and first-Admin bootstrap policy  |
 | [ADR 003](decisions/003-nestjs-jwt-authentication.md)                 | First-party password/JWT authentication and tenant-context authorization     |
 | [ADR 004](decisions/004-tenant-scoped-rbac.md)                        | Tenant-local roles, live permission checks, and bootstrap Admin seeding      |
+| [ADR 005](decisions/005-customer-records-and-numbering.md)            | Customer ownership, archival policy, defaults, and tenant numbering          |
 
 ## Governance
 

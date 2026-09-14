@@ -6,6 +6,9 @@ const permissions = [
   ['user', 'create', 'user.create'],
   ['role', 'read', 'role.read'],
   ['role', 'manage', 'role.manage'],
+  ['customer', 'read', 'customer.read'],
+  ['customer', 'create', 'customer.create'],
+  ['customer', 'update', 'customer.update'],
 ] as const;
 
 const prisma = new PrismaClient();
