@@ -194,12 +194,11 @@ class ApiClient {
   }
 
   async getPayments(): Promise<PaginatedResponse<Payment>> {
-    throw new ApiError('Payments are not implemented yet.', 'NOT_IMPLEMENTED', 501);
+    return this.request<PaginatedResponse<Payment>>('/payments');
   }
 
   async getPayment(id: string): Promise<Payment> {
-    void id;
-    throw new ApiError('Payments are not implemented yet.', 'NOT_IMPLEMENTED', 501);
+    return this.request<Payment>(`/payments/${id}`);
   }
 
   async getRefunds(): Promise<PaginatedResponse<Refund>> {
