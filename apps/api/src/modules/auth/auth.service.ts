@@ -84,6 +84,38 @@ export class AuthService {
     };
   }
 
+  listMembers(organizationId: string) {
+    return this.prisma.organizationMembership.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        status: true,
+        joinedAt: true,
+        user: { select: { id: true, email: true, firstName: true, lastName: true, status: true, lastLoginAt: true } },
+        roles: { select: { role: { select: { id: true, name: true, code: true } } } },
+      },
+    }).then((data) => ({ data }));
+  }
+
+  listRoles(organizationId: string) {
+    return this.prisma.role.findMany({
+      where: { organizationId },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        organizationId: true,
+        name: true,
+        code: true,
+        description: true,
+        isSystem: true,
+        _count: { select: { permissions: true } },
+      },
+    }).then((roles) => ({
+      data: roles.map(({ _count, ...role }) => ({ ...role, permissionsCount: _count.permissions })),
+    }));
+  }
+
   private sign(userId: string, activeOrganizationId?: string) {
     return this.jwt.signAsync({
       sub: userId,

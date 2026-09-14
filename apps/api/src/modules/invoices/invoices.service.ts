@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { Prisma } from '@subscription-management/database';
 import type { z } from 'zod';
 import { PrismaService } from '../database/prisma.service.js';
@@ -7,7 +7,7 @@ type Create = z.infer<typeof createInvoiceSchema>;
 type Line = z.infer<typeof lineSchema>;
 @Injectable()
 export class InvoicesService {
-  constructor(private readonly p: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly p: PrismaService) {}
   async find(o: string, id: string) {
     const x = await this.p.invoice.findFirst({
       where: { id, organizationId: o },
@@ -44,40 +44,48 @@ export class InvoicesService {
     });
   }
   async addLine(o: string, id: string, i: Line) {
-    const x = await this.find(o, id);
-    if (x.status !== 'DRAFT') throw new ConflictException('Only draft invoices can change.');
-    const sub = new Prisma.Decimal(i.unitPrice).mul(i.quantity);
-    const d = new Prisma.Decimal(i.discountAmount ?? '0');
-    const t = new Prisma.Decimal(i.taxAmount ?? '0');
-    return this.p.invoiceItem.create({
-      data: {
-        invoiceId: id,
-        ...i,
-        discountAmount: d,
-        taxAmount: t,
-        lineSubtotal: sub,
-        lineTotal: sub.minus(d).plus(t),
-        currencyCode: x.currencyCode,
-      },
+    return this.p.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM invoices WHERE id = ${id}::uuid AND organization_id = ${o}::uuid FOR UPDATE`;
+      const x = await tx.invoice.findFirst({ where: { id, organizationId: o }, select: { status: true, currencyCode: true } });
+      if (!x) throw new NotFoundException('Invoice not found.');
+      if (x.status !== 'DRAFT') throw new ConflictException('Only draft invoices can change.');
+      const sub = new Prisma.Decimal(i.unitPrice).mul(i.quantity);
+      const d = new Prisma.Decimal(i.discountAmount ?? '0');
+      const t = new Prisma.Decimal(i.taxAmount ?? '0');
+      return tx.invoiceItem.create({
+        data: {
+          invoiceId: id,
+          ...i,
+          discountAmount: d,
+          taxAmount: t,
+          lineSubtotal: sub,
+          lineTotal: sub.minus(d).plus(t),
+          currencyCode: x.currencyCode,
+        },
+      });
     });
   }
   async finalize(o: string, id: string) {
-    const x = await this.find(o, id);
-    if (x.status !== 'DRAFT' || !x.items.length)
-      throw new ConflictException('Only non-empty draft invoices can be finalized.');
-    const subtotal = x.items.reduce((a, i) => a.add(i.lineSubtotal), new Prisma.Decimal(0));
-    const discount = x.items.reduce((a, i) => a.add(i.discountAmount), new Prisma.Decimal(0));
-    const tax = x.items.reduce((a, i) => a.add(i.taxAmount), new Prisma.Decimal(0));
-    return this.p.invoice.update({
-      where: { id },
-      data: {
-        status: 'FINALIZED',
-        subtotal,
-        discountTotal: discount,
-        taxTotal: tax,
-        grandTotal: subtotal.minus(discount).plus(tax),
-        finalizedAt: new Date(),
-      },
+    return this.p.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM invoices WHERE id = ${id}::uuid AND organization_id = ${o}::uuid FOR UPDATE`;
+      const x = await tx.invoice.findFirst({ where: { id, organizationId: o }, include: { items: true } });
+      if (!x) throw new NotFoundException('Invoice not found.');
+      if (x.status !== 'DRAFT' || !x.items.length)
+        throw new ConflictException('Only non-empty draft invoices can be finalized.');
+      const subtotal = x.items.reduce((a, i) => a.add(i.lineSubtotal), new Prisma.Decimal(0));
+      const discount = x.items.reduce((a, i) => a.add(i.discountAmount), new Prisma.Decimal(0));
+      const tax = x.items.reduce((a, i) => a.add(i.taxAmount), new Prisma.Decimal(0));
+      return tx.invoice.update({
+        where: { id },
+        data: {
+          status: 'FINALIZED',
+          subtotal,
+          discountTotal: discount,
+          taxTotal: tax,
+          grandTotal: subtotal.minus(discount).plus(tax),
+          finalizedAt: new Date(),
+        },
+      });
     });
   }
   async void(o: string, id: string) {

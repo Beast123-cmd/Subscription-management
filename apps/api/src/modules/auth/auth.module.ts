@@ -12,7 +12,7 @@ if (!jwtSecret) throw new Error('JWT_SECRET must be configured before starting t
 
 @Module({
   imports: [
-    JwtModule.register({ global: true, secret: jwtSecret, signOptions: { expiresIn: '15m' } }),
+    JwtModule.register({ global: true, secret: jwtSecret, signOptions: { expiresIn: '1h' } }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, TenantGuard, PermissionGuard],
