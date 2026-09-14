@@ -2,17 +2,23 @@
   "name": "@subscription-management/api",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "tsx watch src/main.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "dev": "node --env-file=../../.env.local --import tsx --watch src/main.ts",
+    "typecheck": "pnpm --filter @subscription-management/database build && tsc --noEmit -p tsconfig.json",
+    "bootstrap:admin": "node --env-file=../../.env.local --import tsx src/scripts/bootstrap-admin.ts"
   },
   "dependencies": {
+    "@nestjs/jwt": "^11.0.0",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
     "@nestjs/platform-express": "^11.1.6",
+    "@subscription-management/database": "workspace:*",
+    "bcryptjs": "^3.0.2",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",

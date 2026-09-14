@@ -15,6 +15,7 @@ This directory is the implementation contract for the Subscription Management / 
 | [Architecture Review](../PROJECT_ARCHITECTURE_AND_DATABASE_REVIEW.md) | Original design-gate review and ERD                                          |
 | [ADR 001](decisions/001-finalized-design-amendments.md)               | Approved lifecycle, tenancy, financial, timezone, and concurrency amendments |
 | [ADR 002](decisions/002-identity-tenancy-bootstrap.md)                | Identity normalization, tenant membership, and first-Admin bootstrap policy  |
+| [ADR 003](decisions/003-nestjs-jwt-authentication.md)                 | First-party password/JWT authentication and tenant-context authorization     |
 
 ## Governance
 

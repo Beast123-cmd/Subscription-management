@@ -2,7 +2,12 @@
   "name": "@subscription-management/database",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "validate": "dotenv -e ../../.env.local -- prisma validate --schema prisma/schema.prisma",
     "generate": "dotenv -e ../../.env.local -- prisma generate --schema prisma/schema.prisma",
     "migrate:dev": "dotenv -e ../../.env.local -- prisma migrate dev --schema prisma/schema.prisma",
@@ -14,6 +19,7 @@
   },
   "devDependencies": {
     "dotenv-cli": "^8.0.0",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "typescript": "^5.9.2"
   }
 }

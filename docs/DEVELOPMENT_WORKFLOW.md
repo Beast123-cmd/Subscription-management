@@ -63,7 +63,11 @@ pnpm db:deploy    # apply committed migrations to a shared/production branch
 pnpm db:generate  # generate Prisma Client after a model exists
 ```
 
-At this phase the Prisma schema intentionally has no models. The first model/migration is Phase 3 identity and tenancy, following the approved database specification. `db:generate` is included for that next phase and will only be used after models are introduced.
+The identity/tenancy migration is the first approved model set. Run `db:generate` after any approved Prisma model change; do not add future-domain tables ahead of their build phase.
+
+## First organization bootstrap
+
+After setting the `BOOTSTRAP_*` values in an ignored `.env.local`, run `pnpm --filter @subscription-management/api bootstrap:admin`. It creates one organization, one active user, and one active membership atomically. It refuses to reuse the requested organization slug or user email. Phase 5 assigns the Admin role once RBAC tables exist.
 
 ## Neon branch workflow
 

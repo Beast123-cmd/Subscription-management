@@ -28,11 +28,11 @@ List responses use `limit`, opaque `cursor`, allow-listed filters/sort, and stab
 | ------------------------------------ | --------------------------------------------------------- |
 | `POST /api/auth/login`               | Authenticate email/password and issue JWT/session payload |
 | `POST /api/auth/logout`              | End local/session state as applicable                     |
-| `GET /api/me`                        | Current user and memberships                              |
+| `GET /api/auth/me`                   | Current active user and available organizations           |
 | `GET /api/organizations`             | Organizations available to the user                       |
 | `POST /api/organizations/:id/select` | Select an authorized active organization                  |
 
-The exact active-organization header/claim is selected in Phase 4. It communicates choice, not authorization.
+Active organization is encoded in a newly issued short-lived JWT after selection. Tenant guards verify that token claim against the current active membership and organization in PostgreSQL on every tenant-scoped request; the claim alone never grants access.
 
 ## Resource endpoints
 
