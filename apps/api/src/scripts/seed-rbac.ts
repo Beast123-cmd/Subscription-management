@@ -21,6 +21,8 @@ const permissions = [
   ['invoice', 'read', 'invoice.read'],
   ['invoice', 'create', 'invoice.create'],
   ['invoice', 'update', 'invoice.update'],
+  ['payment', 'read', 'payment.read'],
+  ['payment', 'create', 'payment.create'],
   ['quotation', 'read', 'quotation.read'],
   ['quotation', 'create', 'quotation.create'],
   ['quotation', 'update', 'quotation.update'],

@@ -10,12 +10,14 @@ import { QuotationsModule } from './modules/quotations/quotations.module.js';
 import { InvoicesModule } from './modules/invoices/invoices.module.js';
 import { HealthController } from './health.controller.js';
 import { OrganizationsModule } from './modules/organizations/organizations.module.js';
+import { PaymentsModule } from './modules/payments/payments.module.js';
 
 @Module({
   imports: [
     DatabaseModule,
     AuthModule,
     OrganizationsModule,
+    PaymentsModule,
     CustomersModule,
     CatalogModule,
     PlansModule,
