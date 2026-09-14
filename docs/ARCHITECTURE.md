@@ -10,19 +10,19 @@ flowchart LR
   A --> G[Auth, organization context, RBAC]
   G --> D[Domain services]
   D --> P[Prisma]
-  P --> DB[(PostgreSQL\nLocal Docker or Neon)]
+  P --> DB[(Shared Neon PostgreSQL)]
   D --> AL[Audit log]
 ```
 
 ## Technology contract
 
-| Layer | Choice | Responsibility |
-| --- | --- | --- |
-| Web | React, TypeScript, Vite, Tailwind, shadcn/ui, TanStack Query | UX, forms, routing, presentation of server state |
-| API | Node.js, NestJS, TypeScript, REST, Zod | Authorization, validation, rules, transactions, calculations |
-| Data | PostgreSQL, Prisma, Neon/local Docker | Relational source of truth and integrity constraints |
-| Auth | Password hashing, JWT, RBAC | Identity, active tenant, permissions |
-| Workspace | pnpm, Turborepo, Docker Compose | Local development and shared tooling |
+| Layer     | Choice                                                       | Responsibility                                               |
+| --------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Web       | React, TypeScript, Vite, Tailwind, shadcn/ui, TanStack Query | UX, forms, routing, presentation of server state             |
+| API       | Node.js, NestJS, TypeScript, REST, Zod                       | Authorization, validation, rules, transactions, calculations |
+| Data      | Neon PostgreSQL, Prisma                                      | Shared relational source of truth and integrity constraints  |
+| Auth      | Password hashing, JWT, RBAC                                  | Identity, active tenant, permissions                         |
+| Workspace | pnpm, Turborepo                                              | Reproducible dependencies and shared tooling                 |
 
 The API is authoritative for prices, totals, discounts, taxes, subscription transitions, and payment settlement. The browser may preview calculations only.
 
@@ -35,7 +35,6 @@ packages/database Prisma schema, generated client, migrations
 packages/config   shared TypeScript/lint/tool configuration
 packages/types    narrowly shared transport types only
 packages/ui       later, when real shared UI exists
-infra/docker      local infrastructure configuration
 docs              engineering documentation and ADRs
 ```
 

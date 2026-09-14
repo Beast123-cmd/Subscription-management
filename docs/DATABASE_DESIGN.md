@@ -6,17 +6,17 @@ PostgreSQL is the operational source of truth. Prioritize tenant isolation, rela
 
 ## Target model
 
-| Domain | Target tables |
-| --- | --- |
-| Identity/tenancy | `organizations`, `users`, `organization_memberships` |
-| RBAC | `roles`, `permissions`, `membership_roles`, `role_permissions` |
-| Customers | `customers`, `customer_contacts`, `customer_addresses` |
-| Catalog | `products`, `product_variants`, `product_attributes`, `product_attribute_values`, `product_variant_attribute_values` |
-| Plans | `plans`, `plan_items`, `plan_prices` |
-| Subscriptions | `subscriptions`, `subscription_items`, `subscription_amendments`, `subscription_events` |
-| Quotations | `quotation_templates`, `quotation_template_items`, later `quotations`, `quotation_items` |
-| Billing | `invoices`, `invoice_items`, `payments`, later `payment_transactions`, `refunds`, `credit_notes`, `credit_note_items` |
-| Rules/platform | `discounts`, `discount_rules`, applicability joins, `taxes`, `tax_rules`, `audit_logs`, later `organization_sequences` |
+| Domain           | Target tables                                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Identity/tenancy | `organizations`, `users`, `organization_memberships`                                                                   |
+| RBAC             | `roles`, `permissions`, `membership_roles`, `role_permissions`                                                         |
+| Customers        | `customers`, `customer_contacts`, `customer_addresses`                                                                 |
+| Catalog          | `products`, `product_variants`, `product_attributes`, `product_attribute_values`, `product_variant_attribute_values`   |
+| Plans            | `plans`, `plan_items`, `plan_prices`                                                                                   |
+| Subscriptions    | `subscriptions`, `subscription_items`, `subscription_amendments`, `subscription_events`                                |
+| Quotations       | `quotation_templates`, `quotation_template_items`, later `quotations`, `quotation_items`                               |
+| Billing          | `invoices`, `invoice_items`, `payments`, later `payment_transactions`, `refunds`, `credit_notes`, `credit_note_items`  |
+| Rules/platform   | `discounts`, `discount_rules`, applicability joins, `taxes`, `tax_rules`, `audit_logs`, later `organization_sequences` |
 
 This is a phased target model, not a first-migration checklist.
 

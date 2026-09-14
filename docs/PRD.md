@@ -8,14 +8,14 @@ Build a multi-tenant Subscription Management and Revenue Operations Platform for
 
 Platform identities (`User`) differ from buyers (`Customer`). A user can belong to many organizations through an `OrganizationMembership`; all permissions are evaluated in the active organization.
 
-| Persona | Primary needs |
-| --- | --- |
-| Organization Admin | Organization setup, memberships, roles, and authorized operations |
-| Internal User | Day-to-day sales, support, catalog, and customer work per permission |
-| Billing Manager | Invoicing, payments, refunds, collections, and billing reports |
-| Sales Manager | Products, plans, quotations, subscriptions, and customer activity |
-| Portal User | Later: restricted access to an explicitly linked customer |
-| Read-only user | Reports and permitted records without mutation |
+| Persona            | Primary needs                                                        |
+| ------------------ | -------------------------------------------------------------------- |
+| Organization Admin | Organization setup, memberships, roles, and authorized operations    |
+| Internal User      | Day-to-day sales, support, catalog, and customer work per permission |
+| Billing Manager    | Invoicing, payments, refunds, collections, and billing reports       |
+| Sales Manager      | Products, plans, quotations, subscriptions, and customer activity    |
+| Portal User        | Later: restricted access to an explicitly linked customer            |
+| Read-only user     | Reports and permitted records without mutation                       |
 
 The first organization uses an explicit bootstrap flow that creates its initial Admin. Only an authorized Admin can create or invite Internal Users in that organization.
 

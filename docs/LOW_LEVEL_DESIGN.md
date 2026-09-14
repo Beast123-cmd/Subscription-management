@@ -36,13 +36,13 @@ Invoices use `DRAFT`, `FINALIZED`, `PARTIALLY_PAID`, `PAID`, and `VOID`. `OVERDU
 
 ## Transaction patterns
 
-| Operation | Atomic work |
-| --- | --- |
-| Create subscription | Validate tenant-owned customer/plan, resolve price, snapshot items, assign number, event/audit |
-| Amend subscription | Validate transition, write amendment/event, update current state, audit |
-| Finalize invoice | Validate draft, calculate decimals, persist snapshots/totals, finalize, audit |
-| Record payment | Claim idempotency key, validate invoice/currency, assign number, persist payment, update derived balance/state, audit |
-| Refund | Claim idempotency key, validate refundable amount, assign number, persist refund, update derived settlement projection, audit |
+| Operation           | Atomic work                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Create subscription | Validate tenant-owned customer/plan, resolve price, snapshot items, assign number, event/audit                                |
+| Amend subscription  | Validate transition, write amendment/event, update current state, audit                                                       |
+| Finalize invoice    | Validate draft, calculate decimals, persist snapshots/totals, finalize, audit                                                 |
+| Record payment      | Claim idempotency key, validate invoice/currency, assign number, persist payment, update derived balance/state, audit         |
+| Refund              | Claim idempotency key, validate refundable amount, assign number, persist refund, update derived settlement projection, audit |
 
 ## Calculation and history
 

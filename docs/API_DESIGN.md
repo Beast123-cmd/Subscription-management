@@ -7,7 +7,13 @@ Endpoints are under `/api` initially. JSON request/response fields use camelCase
 Use `200/201/204` success, `400` validation/command error, `401` unauthenticated, `403` forbidden, `404` not found in the active tenant, `409` uniqueness/state/concurrency conflict, `422` domain-rule violation, and `500` safe internal error. Error envelope:
 
 ```json
-{ "error": { "code": "INVOICE_NOT_DRAFT", "message": "Only draft invoices can be finalized.", "details": [] } }
+{
+  "error": {
+    "code": "INVOICE_NOT_DRAFT",
+    "message": "Only draft invoices can be finalized.",
+    "details": []
+  }
+}
 ```
 
 List responses use `limit`, opaque `cursor`, allow-listed filters/sort, and stable ordering:
@@ -18,13 +24,13 @@ List responses use `limit`, opaque `cursor`, allow-listed filters/sort, and stab
 
 ## Authentication and organization context
 
-| Method/path | Purpose |
-| --- | --- |
-| `POST /api/auth/login` | Authenticate email/password and issue JWT/session payload |
-| `POST /api/auth/logout` | End local/session state as applicable |
-| `GET /api/me` | Current user and memberships |
-| `GET /api/organizations` | Organizations available to the user |
-| `POST /api/organizations/:id/select` | Select an authorized active organization |
+| Method/path                          | Purpose                                                   |
+| ------------------------------------ | --------------------------------------------------------- |
+| `POST /api/auth/login`               | Authenticate email/password and issue JWT/session payload |
+| `POST /api/auth/logout`              | End local/session state as applicable                     |
+| `GET /api/me`                        | Current user and memberships                              |
+| `GET /api/organizations`             | Organizations available to the user                       |
+| `POST /api/organizations/:id/select` | Select an authorized active organization                  |
 
 The exact active-organization header/claim is selected in Phase 4. It communicates choice, not authorization.
 
@@ -32,30 +38,30 @@ The exact active-organization header/claim is selected in Phase 4. It communicat
 
 Standard CRUD applies only to editable resources. Each route requires domain permission and scopes data to the active organization.
 
-| Resource | Initial routes |
-| --- | --- |
-| Customers | `GET/POST /customers`, `GET/PATCH /customers/:id` |
-| Products | `GET/POST /products`, `GET/PATCH /products/:id` |
-| Plans | `GET/POST /plans`, `GET/PATCH /plans/:id`, `POST /plans/:id/prices` |
-| Subscriptions | `GET/POST /subscriptions`, `GET /subscriptions/:id` |
-| Quotations | `GET/POST /quotations`, `GET /quotations/:id` |
-| Invoices | `GET/POST /invoices`, `GET /invoices/:id` |
-| Payments | `GET /payments`, `POST /payments` |
-| Reports | `GET /reports/revenue`, `/reports/subscriptions`, `/reports/payments` |
+| Resource      | Initial routes                                                        |
+| ------------- | --------------------------------------------------------------------- |
+| Customers     | `GET/POST /customers`, `GET/PATCH /customers/:id`                     |
+| Products      | `GET/POST /products`, `GET/PATCH /products/:id`                       |
+| Plans         | `GET/POST /plans`, `GET/PATCH /plans/:id`, `POST /plans/:id/prices`   |
+| Subscriptions | `GET/POST /subscriptions`, `GET /subscriptions/:id`                   |
+| Quotations    | `GET/POST /quotations`, `GET /quotations/:id`                         |
+| Invoices      | `GET/POST /invoices`, `GET /invoices/:id`                             |
+| Payments      | `GET /payments`, `POST /payments`                                     |
+| Reports       | `GET /reports/revenue`, `/reports/subscriptions`, `/reports/payments` |
 
 ## Command endpoints
 
-| Endpoint | Required outcome |
-| --- | --- |
-| `POST /subscriptions/:id/confirm` | Validate transition; create business event/audit |
-| `POST /subscriptions/:id/activate` | Validate effective terms and activate atomically |
-| `POST /subscriptions/:id/pause` | Record amendment/event and pause |
-| `POST /subscriptions/:id/resume` | Record amendment/event and resume |
-| `POST /subscriptions/:id/cancel` | Validate cancellation and preserve history |
-| `POST /invoices/:id/finalize` | Calculate/snapshot totals and lock financial document |
-| `POST /invoices/:id/void` | Void according to policy with audit trail |
-| `POST /payments` | Record one invoice payment atomically |
-| `POST /payments/:id/refunds` | Create refund without changing payment history |
+| Endpoint                           | Required outcome                                      |
+| ---------------------------------- | ----------------------------------------------------- |
+| `POST /subscriptions/:id/confirm`  | Validate transition; create business event/audit      |
+| `POST /subscriptions/:id/activate` | Validate effective terms and activate atomically      |
+| `POST /subscriptions/:id/pause`    | Record amendment/event and pause                      |
+| `POST /subscriptions/:id/resume`   | Record amendment/event and resume                     |
+| `POST /subscriptions/:id/cancel`   | Validate cancellation and preserve history            |
+| `POST /invoices/:id/finalize`      | Calculate/snapshot totals and lock financial document |
+| `POST /invoices/:id/void`          | Void according to policy with audit trail             |
+| `POST /payments`                   | Record one invoice payment atomically                 |
+| `POST /payments/:id/refunds`       | Create refund without changing payment history        |
 
 `POST /payments` and `POST /payments/:id/refunds` require an `Idempotency-Key` header from their first release. The server stores a tenant-scoped command fingerprint/result and returns the original result for an equivalent retry; a reused key with different request content returns `409`. Other commands adopt idempotency whenever they can be retried or cause a financial/lifecycle side effect. Zod validates boundary input; services make final authorization and domain checks.
 
