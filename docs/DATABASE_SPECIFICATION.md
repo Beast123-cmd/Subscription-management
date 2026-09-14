@@ -1,0 +1,85 @@
+# Database Specification
+
+This is the target relational specification for business-schema phases. It does not authorize creating all tables at once. All IDs are `UUID`; all tables use `created_at TIMESTAMPTZ NOT NULL DEFAULT now()` and `updated_at TIMESTAMPTZ` where mutable. Money is `NUMERIC(19,4)` plus `CHAR(3)` currency code. Timestamp columns are `TIMESTAMPTZ`; business calendar dates are `DATE`.
+
+## Global conventions
+
+- Prisma models map to plural `snake_case` PostgreSQL tables.
+- Tenant parents expose `UNIQUE (organization_id, id)` when required for composite tenant-aware foreign keys.
+- Financial and event history uses `ON DELETE RESTRICT`; tightly owned unused configuration children may use cascade only after review.
+- Effective ranges are `[effective_from, effective_until)`. An open end is `NULL`; non-null end must be later than start.
+- `organizations.timezone` holds a validated IANA name. `default_currency_code` is a default, never an implicit transaction currency.
+
+## Phase 3: identity and tenancy
+
+| Table | Required columns | Keys and constraints |
+| --- | --- | --- |
+| `organizations` | `id`, `name VARCHAR(160)`, `slug VARCHAR(80)`, `default_currency_code CHAR(3)`, `timezone VARCHAR(64)`, `status organization_status` | PK `id`; unique `slug`; status `ACTIVE/SUSPENDED/ARCHIVED` |
+| `users` | `id`, `email CITEXT`, `password_hash TEXT`, `first_name VARCHAR(100)`, `last_name VARCHAR(100)`, `status user_status`, `last_login_at` | PK `id`; unique `email`; status `ACTIVE/INVITED/SUSPENDED` |
+| `organization_memberships` | `id`, `organization_id`, `user_id`, `status membership_status`, `joined_at` | PK `id`; FK organization/user restrict; unique `(organization_id,user_id)`; index `(user_id,status)` |
+
+For composite tenant foreign keys, each tenant-owned parent uses `UNIQUE (organization_id, id)`, even though `id` is already a primary key. This permits a child to reference the organization and parent together.
+
+## RBAC
+
+| Table | Required columns | Keys and constraints |
+| --- | --- | --- |
+| `permissions` | `id`, `resource VARCHAR(64)`, `action VARCHAR(64)`, `code VARCHAR(128)`, `description TEXT` | PK; unique `code` |
+| `roles` | `id`, `organization_id`, `name VARCHAR(100)`, `code VARCHAR(100)`, `description TEXT`, `is_system BOOLEAN` | PK; FK organization restrict; unique `(organization_id,code)`; unique `(organization_id,id)` |
+| `membership_roles` | `membership_id`, `role_id` | composite PK; restrict FKs |
+| `role_permissions` | `role_id`, `permission_id` | composite PK; restrict FKs |
+
+Roles are tenant-local. System role templates are seeded into each organization rather than relying on nullable organization scope.
+
+## Customer and catalog
+
+| Table | Required columns | Keys and constraints |
+| --- | --- | --- |
+| `customers` | `id`, `organization_id`, `customer_number`, `customer_type`, `legal_name`, `display_name`, `email`, `phone`, `tax_identifier`, `status`, `default_currency_code` | unique `(organization_id,customer_number)`; unique `(organization_id,id)`; archive status |
+| `customer_contacts` | `id`, `customer_id`, `first_name`, `last_name`, `email`, `phone`, `job_title`, `is_primary`, `status` | FK customer restrict; partial unique primary-contact rule if adopted |
+| `customer_addresses` | `id`, `customer_id`, `address_type`, `address_line_1`, `address_line_2`, `city`, `state`, `postal_code`, `country_code`, `is_default` | FK customer restrict; typed/default address rule |
+| `products` | `id`, `organization_id`, `product_code`, `name`, `description`, `product_type`, `cost_price`, `cost_currency_code`, `status` | unique `(organization_id,product_code)` and `(organization_id,id)` |
+| `product_variants` | `id`, `product_id`, `sku`, `name`, `description`, `status` | unique product/SKU scope selected at catalog phase; parent restrict |
+| `product_attributes` | `id`, `product_id`, `name`, `code` | unique `(product_id,code)` |
+| `product_attribute_values` | `id`, `attribute_id`, `value` | unique `(attribute_id,value)` |
+| `product_variant_attribute_values` | `variant_id`, `attribute_value_id` | composite PK; restrict FKs |
+
+## Plans and pricing
+
+| Table | Required columns | Keys and constraints |
+| --- | --- | --- |
+| `plans` | `id`, `organization_id`, `plan_code`, `name`, `description`, `status`, `minimum_quantity`, `maximum_quantity`, `starts_at`, `ends_at`, `auto_close`, `closable`, `pausable`, `renewable` | unique `(organization_id,plan_code)` and `(organization_id,id)`; quantity/date checks |
+| `plan_items` | `id`, `plan_id`, `product_id`, `variant_id NULL`, `quantity` | positive quantity; validate product/variant tenant and variant-to-product ownership |
+| `plan_prices` | `id`, `plan_id`, `currency_code`, `billing_period`, `amount`, `effective_from`, `effective_until NULL`, `status` | amount nonnegative; date check; no overlap by plan/currency/period via exclusion constraint; index `(plan_id,currency_code,billing_period,effective_from)` |
+
+## Subscriptions and quotations
+
+| Table | Required columns | Keys and constraints |
+| --- | --- | --- |
+| `subscriptions` | `id`, `organization_id`, `subscription_number`, `customer_id`, `plan_id`, `source_quotation_id NULL`, `status`, `start_date`, `expiration_date NULL`, `billing_start_date`, `currency_code`, `payment_terms`, `auto_renew`, `current_period_start`, `current_period_end` | tenant composite FKs to customer/plan; unique number and `(organization_id,id)`; explicit state service checks |
+| `subscription_items` | `id`, `subscription_id`, `product_id NULL`, `variant_id NULL`, `plan_price_id NULL`, `description_snapshot`, `quantity`, `unit_price`, `currency_code`, `discount_amount`, `tax_rate`, `tax_amount` | positive quantity; financial snapshot |
+| `subscription_amendments` | `id`, `subscription_id`, `amendment_type`, `effective_at`, `reason`, `before_snapshot`, `after_snapshot`, `created_by` | append-only; actor FK restrict |
+| `subscription_events` | `id`, `organization_id`, `subscription_id`, `event_type`, `occurred_at`, `actor_user_id NULL`, `metadata` | append-only; tenant composite subscription FK |
+| `quotation_templates` / `_items` | template name, validity days, plan/item configuration | mutable configuration; template items cascade only while template unused |
+| `quotations` / `_items` | organization/customer, quotation number, status, issue/valid-until dates, currency, snapshotted lines/totals | quote state machine; accepted quote may be referenced by subscription |
+
+## Billing, numbers, and idempotency
+
+| Table | Required columns | Keys and constraints |
+| --- | --- | --- |
+| `invoices` | `id`, `organization_id`, `invoice_number`, `customer_id`, `subscription_id NULL`, `status`, `currency_code`, `issue_date`, `due_date`, `subtotal`, `discount_total`, `tax_total`, `grand_total`, `amount_paid`, `amount_due`, `finalized_at NULL`, `paid_at NULL` | tenant composite FKs to customer/subscription; unique number and `(organization_id,id)`; finalized values immutable |
+| `invoice_items` | `id`, `invoice_id`, `product_id NULL`, `variant_id NULL`, `description`, `quantity`, `unit_price`, `discount_amount`, `tax_amount`, `line_subtotal`, `line_total`, `currency_code` | positive quantity; financial snapshot |
+| `payments` | `id`, `organization_id`, `payment_number`, `invoice_id`, `amount`, `currency_code`, `payment_method`, `status`, `transaction_reference`, `paid_at` | tenant composite invoice FK; unique number and `(organization_id,id)`; amount positive |
+| `refunds` | `id`, `organization_id`, `refund_number`, `payment_id`, `amount`, `currency_code`, `reason`, `status`, `refunded_at` | tenant composite payment FK; unique number; amount positive |
+| `payment_transactions` | `id`, `payment_id`, `provider`, `provider_transaction_id`, `status`, `processed_at`, `safe_metadata` | later gateway integration; unique `(provider,provider_transaction_id)` |
+| `credit_notes` / `_items` | invoice correction document and snapshotted lines | later; restrict deletion |
+| `organization_sequences` | `organization_id`, `sequence_type`, `next_value BIGINT` | composite PK; row locked/incremented in creator transaction |
+| `idempotency_keys` | `id`, `organization_id`, `operation`, `key`, `request_hash`, `status`, `response_reference`, `expires_at` | unique `(organization_id,operation,key)`; required for payment/refund commands |
+
+## Rules and audit
+
+| Table | Required columns | Keys and constraints |
+| --- | --- | --- |
+| `discounts` / `discount_rules` | organization, code, type, value, validity, usage limits, eligibility | discount type/range checks; used values snapshot to invoices |
+| `taxes` / `tax_rules` | organization, code, rate, type, validity, status | effective ranges; used values snapshot to invoices |
+| `audit_logs` | `id`, `organization_id`, `actor_user_id NULL`, `action`, `resource_type`, `resource_id`, `before_data`, `after_data`, `ip_address NULL`, `user_agent NULL` | append-only; index `(organization_id,resource_type,resource_id,created_at)` |
