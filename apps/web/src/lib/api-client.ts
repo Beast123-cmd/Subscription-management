@@ -10,21 +10,10 @@ import type {
   Refund,
   AuditLog,
   Organization,
+  OrganizationMember,
+  Role,
   PaginatedResponse,
 } from '@/types';
-import {
-  MOCK_CUSTOMERS,
-  MOCK_INVOICES,
-  MOCK_ORGANIZATIONS,
-  MOCK_PAYMENTS,
-  MOCK_PLANS,
-  MOCK_PRODUCTS,
-  MOCK_REFUNDS,
-  MOCK_SUBSCRIPTIONS,
-  MOCK_QUOTATIONS,
-  MOCK_AUDIT_LOGS,
-  MOCK_USERS,
-} from './mock-data';
 
 export class ApiError extends Error {
   code: string;
@@ -121,33 +110,28 @@ class ApiClient {
     );
   }
 
+  async getOrganizationMembers(): Promise<{ data: OrganizationMember[] }> {
+    return this.request<{ data: OrganizationMember[] }>('/organizations/members');
+  }
+
+  async getOrganizationRoles(): Promise<{ data: Role[] }> {
+    return this.request<{ data: Role[] }>('/organizations/roles');
+  }
+
   // ==========================================
   // Customers
   // ==========================================
 
-  async getCustomers(_params?: {
+  async getCustomers(params?: {
     search?: string;
     status?: string;
   }): Promise<PaginatedResponse<Customer>> {
-    try {
-      return await this.request<PaginatedResponse<Customer>>('/customers');
-    } catch {
-      return {
-        data: MOCK_CUSTOMERS,
-        page: { nextCursor: null, limit: 25, total: MOCK_CUSTOMERS.length },
-      };
-    }
+    void params;
+    return this.request<PaginatedResponse<Customer>>('/customers');
   }
 
   async getCustomer(id: string): Promise<Customer> {
-    try {
-      return await this.request<Customer>(`/customers/${id}`);
-    } catch {
-      const customer = MOCK_CUSTOMERS.find((c) => c.id === id || c.customerNumber === id);
-      if (!customer)
-        throw new ApiError('Customer not found in active organization', 'NOT_FOUND', 404);
-      return customer;
-    }
+    return this.request<Customer>(`/customers/${id}`);
   }
 
   // ==========================================
@@ -155,45 +139,19 @@ class ApiClient {
   // ==========================================
 
   async getProducts(): Promise<PaginatedResponse<Product>> {
-    try {
-      return await this.request<PaginatedResponse<Product>>('/products');
-    } catch {
-      return {
-        data: MOCK_PRODUCTS,
-        page: { nextCursor: null, limit: 25, total: MOCK_PRODUCTS.length },
-      };
-    }
+    return this.request<PaginatedResponse<Product>>('/products');
   }
 
   async getProduct(id: string): Promise<Product> {
-    try {
-      return await this.request<Product>(`/products/${id}`);
-    } catch {
-      const p = MOCK_PRODUCTS.find((x) => x.id === id || x.productCode === id);
-      if (!p) throw new ApiError('Product not found in active organization', 'NOT_FOUND', 404);
-      return p;
-    }
+    return this.request<Product>(`/products/${id}`);
   }
 
   async getPlans(): Promise<PaginatedResponse<Plan>> {
-    try {
-      return await this.request<PaginatedResponse<Plan>>('/plans');
-    } catch {
-      return {
-        data: MOCK_PLANS,
-        page: { nextCursor: null, limit: 25, total: MOCK_PLANS.length },
-      };
-    }
+    return this.request<PaginatedResponse<Plan>>('/plans');
   }
 
   async getPlan(id: string): Promise<Plan> {
-    try {
-      return await this.request<Plan>(`/plans/${id}`);
-    } catch {
-      const plan = MOCK_PLANS.find((x) => x.id === id || x.planCode === id);
-      if (!plan) throw new ApiError('Plan not found in active organization', 'NOT_FOUND', 404);
-      return plan;
-    }
+    return this.request<Plan>(`/plans/${id}`);
   }
 
   // ==========================================
@@ -201,45 +159,19 @@ class ApiClient {
   // ==========================================
 
   async getSubscriptions(): Promise<PaginatedResponse<Subscription>> {
-    try {
-      return await this.request<PaginatedResponse<Subscription>>('/subscriptions');
-    } catch {
-      return {
-        data: MOCK_SUBSCRIPTIONS,
-        page: { nextCursor: null, limit: 25, total: MOCK_SUBSCRIPTIONS.length },
-      };
-    }
+    return this.request<PaginatedResponse<Subscription>>('/subscriptions');
   }
 
   async getSubscription(id: string): Promise<Subscription> {
-    try {
-      return await this.request<Subscription>(`/subscriptions/${id}`);
-    } catch {
-      const s = MOCK_SUBSCRIPTIONS.find((x) => x.id === id || x.subscriptionNumber === id);
-      if (!s) throw new ApiError('Subscription not found in active organization', 'NOT_FOUND', 404);
-      return s;
-    }
+    return this.request<Subscription>(`/subscriptions/${id}`);
   }
 
   async getQuotations(): Promise<PaginatedResponse<Quotation>> {
-    try {
-      return await this.request<PaginatedResponse<Quotation>>('/quotations');
-    } catch {
-      return {
-        data: MOCK_QUOTATIONS,
-        page: { nextCursor: null, limit: 25, total: MOCK_QUOTATIONS.length },
-      };
-    }
+    return this.request<PaginatedResponse<Quotation>>('/quotations');
   }
 
   async getQuotation(id: string): Promise<Quotation> {
-    try {
-      return await this.request<Quotation>(`/quotations/${id}`);
-    } catch {
-      const q = MOCK_QUOTATIONS.find((x) => x.id === id || x.quotationNumber === id);
-      if (!q) throw new ApiError('Quotation not found in active organization', 'NOT_FOUND', 404);
-      return q;
-    }
+    return this.request<Quotation>(`/quotations/${id}`);
   }
 
   // ==========================================
@@ -247,56 +179,24 @@ class ApiClient {
   // ==========================================
 
   async getInvoices(): Promise<PaginatedResponse<Invoice>> {
-    try {
-      return await this.request<PaginatedResponse<Invoice>>('/invoices');
-    } catch {
-      return {
-        data: MOCK_INVOICES,
-        page: { nextCursor: null, limit: 25, total: MOCK_INVOICES.length },
-      };
-    }
+    return this.request<PaginatedResponse<Invoice>>('/invoices');
   }
 
   async getInvoice(id: string): Promise<Invoice> {
-    try {
-      return await this.request<Invoice>(`/invoices/${id}`);
-    } catch {
-      const inv = MOCK_INVOICES.find((x) => x.id === id || x.invoiceNumber === id);
-      if (!inv) throw new ApiError('Invoice not found in active organization', 'NOT_FOUND', 404);
-      return inv;
-    }
+    return this.request<Invoice>(`/invoices/${id}`);
   }
 
   async getPayments(): Promise<PaginatedResponse<Payment>> {
-    try {
-      return await this.request<PaginatedResponse<Payment>>('/payments');
-    } catch {
-      return {
-        data: MOCK_PAYMENTS,
-        page: { nextCursor: null, limit: 25, total: MOCK_PAYMENTS.length },
-      };
-    }
+    throw new ApiError('Payments are not implemented yet.', 'NOT_IMPLEMENTED', 501);
   }
 
   async getPayment(id: string): Promise<Payment> {
-    try {
-      return await this.request<Payment>(`/payments/${id}`);
-    } catch {
-      const p = MOCK_PAYMENTS.find((x) => x.id === id || x.paymentNumber === id);
-      if (!p) throw new ApiError('Payment not found in active organization', 'NOT_FOUND', 404);
-      return p;
-    }
+    void id;
+    throw new ApiError('Payments are not implemented yet.', 'NOT_IMPLEMENTED', 501);
   }
 
   async getRefunds(): Promise<PaginatedResponse<Refund>> {
-    try {
-      return await this.request<PaginatedResponse<Refund>>('/refunds');
-    } catch {
-      return {
-        data: MOCK_REFUNDS,
-        page: { nextCursor: null, limit: 25, total: MOCK_REFUNDS.length },
-      };
-    }
+    throw new ApiError('Refunds are not implemented yet.', 'NOT_IMPLEMENTED', 501);
   }
 
   // ==========================================
@@ -304,14 +204,7 @@ class ApiClient {
   // ==========================================
 
   async getAuditLogs(): Promise<PaginatedResponse<AuditLog>> {
-    try {
-      return await this.request<PaginatedResponse<AuditLog>>('/audit');
-    } catch {
-      return {
-        data: MOCK_AUDIT_LOGS,
-        page: { nextCursor: null, limit: 25, total: MOCK_AUDIT_LOGS.length },
-      };
-    }
+    throw new ApiError('Audit logs are not implemented yet.', 'NOT_IMPLEMENTED', 501);
   }
 }
 

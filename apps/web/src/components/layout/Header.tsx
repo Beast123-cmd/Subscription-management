@@ -4,7 +4,6 @@ import {
   Menu,
   Search,
   Bell,
-  Check,
   ChevronDown,
   Building,
   LogOut,
@@ -16,7 +15,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrgContext';
 import { Dropdown } from '@/components/ui/dropdown';
 import { CommandPalette } from '@/components/ui/command';
-import { Tooltip } from '@/components/ui/tooltip';
 
 export interface HeaderProps {
   onOpenMobileMenu: () => void;

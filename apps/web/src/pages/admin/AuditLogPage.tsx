@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { History, Shield } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { FilterBar } from '@/components/data/FilterBar';
 import { DataTable, type ColumnDef } from '@/components/data/DataTable';

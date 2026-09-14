@@ -46,6 +46,15 @@ export interface Role {
   code: string;
   description?: string | null;
   isSystem: boolean;
+  permissionsCount?: number;
+}
+
+export interface OrganizationMember {
+  id: string;
+  status: MembershipStatus;
+  joinedAt: string;
+  user: User;
+  roles: Array<{ role: Pick<Role, 'id' | 'name' | 'code'> }>;
 }
 
 export interface Permission {

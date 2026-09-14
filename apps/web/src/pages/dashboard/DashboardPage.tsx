@@ -8,7 +8,6 @@ import {
   FileCheck,
   Plus,
   ArrowUpRight,
-  Receipt,
   Users,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';

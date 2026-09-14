@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CheckCheck, Ban, DollarSign, Download, Printer } from 'lucide-react';
+import { ArrowLeft, CheckCheck, Ban, DollarSign, Printer } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/data/StatusBadge';
 import { CurrencyDisplay } from '@/components/data/CurrencyDisplay';

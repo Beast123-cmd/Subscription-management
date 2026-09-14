@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Eye, Edit, Layers } from 'lucide-react';
+import { Plus, Eye, Edit } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { FilterBar } from '@/components/data/FilterBar';
 import { DataTable, type ColumnDef } from '@/components/data/DataTable';

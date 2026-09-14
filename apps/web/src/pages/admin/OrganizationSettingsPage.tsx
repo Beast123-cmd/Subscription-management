@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building, Globe, Clock, DollarSign, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/data/StatusBadge';
 import { Button } from '@/components/ui/button';

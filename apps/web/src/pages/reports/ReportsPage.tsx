@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, TrendingUp, DollarSign, Calendar, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { CurrencyDisplay } from '@/components/data/CurrencyDisplay';
 import { Tabs } from '@/components/ui/tabs';

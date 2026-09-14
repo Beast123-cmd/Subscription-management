@@ -15,7 +15,7 @@ export function StatusBadge({ status, size = 'sm', className }: StatusBadgeProps
   const upper = status.toUpperCase().trim();
 
   let variant: BadgeVariant = 'neutral';
-  let label = status.replace(/_/g, ' ');
+  const label = status.replace(/_/g, ' ');
 
   switch (upper) {
     // Success / Active

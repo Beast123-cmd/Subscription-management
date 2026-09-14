@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ShieldCheck, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +13,6 @@ export function LoginPage() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/app/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,18 +30,13 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate(from, { replace: true });
+      navigate('/select-organization', { replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid email or password.';
       setError(msg);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleQuickLogin = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('SecretPassword123!');
   };
 
   return (
@@ -98,56 +90,6 @@ export function LoginPage() {
             </div>
           </form>
 
-          {/* Demo Quick Logins */}
-          <div className="mt-6 border-t border-slate-100 pt-5">
-            <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
-              <span>Quick Demo Personas</span>
-            </div>
-            <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@acmepay.io')}
-                className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-left text-xs hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <div>
-                  <span className="font-semibold text-slate-800">Admin</span>
-                  <span className="text-slate-400 ml-1.5">admin@acmepay.io</span>
-                </div>
-                <span className="text-[10px] text-emerald-700 font-medium bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                  Full Access
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('billing@acmepay.io')}
-                className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-left text-xs hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <div>
-                  <span className="font-semibold text-slate-800">Billing Manager</span>
-                  <span className="text-slate-400 ml-1.5">billing@acmepay.io</span>
-                </div>
-                <span className="text-[10px] text-amber-700 font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                  Billing & Subs
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('viewer@acmepay.io')}
-                className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-left text-xs hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <div>
-                  <span className="font-semibold text-slate-800">Read-Only</span>
-                  <span className="text-slate-400 ml-1.5">viewer@acmepay.io</span>
-                </div>
-                <span className="text-[10px] text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                  View Only
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
 
         <p className="mt-4 text-center text-xs text-slate-400">

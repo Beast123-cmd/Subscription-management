@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, UserPlus, Shield } from 'lucide-react';
+import { UserPlus, Shield } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { FilterBar } from '@/components/data/FilterBar';
 import { DataTable, type ColumnDef } from '@/components/data/DataTable';
@@ -8,8 +8,10 @@ import { DateDisplay } from '@/components/data/DateDisplay';
 import { Button } from '@/components/ui/button';
 import { Can } from '@/components/auth/Can';
 import { PERMISSIONS } from '@/lib/permissions';
-import { MOCK_USERS } from '@/lib/mock-data';
 import { useToast } from '@/contexts/ToastContext';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+import { useOrganization } from '@/contexts/OrgContext';
 
 interface UserRecord {
   id: string;
@@ -23,14 +25,20 @@ interface UserRecord {
 export function UsersPage() {
   const [search, setSearch] = useState('');
   const toast = useToast();
+  const { activeOrg } = useOrganization();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['organization-members', activeOrg?.id],
+    queryFn: () => apiClient.getOrganizationMembers(),
+    enabled: Boolean(activeOrg),
+  });
 
-  const users: UserRecord[] = MOCK_USERS.map((u) => ({
-    id: u.user.id,
-    name: `${u.user.firstName} ${u.user.lastName}`,
-    email: u.user.email,
-    role: u.role,
-    status: u.user.status || 'ACTIVE',
-    lastLoginAt: u.user.lastLoginAt,
+  const users: UserRecord[] = (data?.data ?? []).map((membership) => ({
+    id: membership.user.id,
+    name: `${membership.user.firstName} ${membership.user.lastName}`,
+    email: membership.user.email,
+    role: membership.roles.map(({ role }) => role.name).join(', ') || 'No role',
+    status: membership.user.status ?? membership.status,
+    lastLoginAt: membership.user.lastLoginAt,
   }));
 
   const filteredUsers = users.filter(
@@ -110,6 +118,9 @@ export function UsersPage() {
         columns={columns}
         data={filteredUsers}
         keyExtractor={(u) => u.id}
+        isLoading={isLoading}
+        isError={isError}
+        errorMessage={error instanceof Error ? error.message : undefined}
         emptyTitle="No users found"
         emptyDescription="Invite team members to collaborate within this organization."
       />

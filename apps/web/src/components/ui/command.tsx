@@ -4,22 +4,10 @@ import {
   Search,
   Users,
   CreditCard,
-  FileText,
-  Package,
-  Layers,
-  FileCheck,
   DollarSign,
   ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  MOCK_CUSTOMERS,
-  MOCK_INVOICES,
-  MOCK_PLANS,
-  MOCK_PRODUCTS,
-  MOCK_SUBSCRIPTIONS,
-  MOCK_QUOTATIONS,
-} from '@/lib/mock-data';
 
 export interface CommandPaletteProps {
   isOpen: boolean;
@@ -50,84 +38,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     }
   }, [isOpen]);
 
-  // Static index of resources
+  // Keep this palette limited to navigation until a real search endpoint exists.
   const allItems: SearchItem[] = useMemo(() => {
-    const items: SearchItem[] = [];
-
-    // Customers
-    MOCK_CUSTOMERS.forEach((c) => {
-      items.push({
-        id: c.id,
-        category: 'Customers',
-        title: c.displayName,
-        subtitle: `${c.customerNumber} · ${c.legalName}`,
-        href: `/app/customers/${c.id}`,
-        icon: Users,
-      });
-    });
-
-    // Subscriptions
-    MOCK_SUBSCRIPTIONS.forEach((s) => {
-      items.push({
-        id: s.id,
-        category: 'Subscriptions',
-        title: s.subscriptionNumber,
-        subtitle: `${s.customerName} · ${s.planName} (${s.status})`,
-        href: `/app/subscriptions/${s.id}`,
-        icon: CreditCard,
-      });
-    });
-
-    // Invoices
-    MOCK_INVOICES.forEach((i) => {
-      items.push({
-        id: i.id,
-        category: 'Invoices',
-        title: i.invoiceNumber,
-        subtitle: `${i.customerName} · Due ${i.dueDate} (${i.status})`,
-        href: `/app/invoices/${i.id}`,
-        icon: FileText,
-      });
-    });
-
-    // Plans
-    MOCK_PLANS.forEach((p) => {
-      items.push({
-        id: p.id,
-        category: 'Plans',
-        title: p.name,
-        subtitle: `${p.planCode}`,
-        href: `/app/plans/${p.id}`,
-        icon: Layers,
-      });
-    });
-
-    // Products
-    MOCK_PRODUCTS.forEach((p) => {
-      items.push({
-        id: p.id,
-        category: 'Products',
-        title: p.name,
-        subtitle: `${p.productCode} · ${p.productType}`,
-        href: `/app/products/${p.id}`,
-        icon: Package,
-      });
-    });
-
-    // Quotations
-    MOCK_QUOTATIONS.forEach((q) => {
-      items.push({
-        id: q.id,
-        category: 'Quotations',
-        title: q.quotationNumber,
-        subtitle: `${q.customerName} · ${q.status}`,
-        href: `/app/quotations/${q.id}`,
-        icon: FileCheck,
-      });
-    });
-
-    // Quick Actions
-    items.push(
+    return [
       {
         id: 'act-new-cust',
         category: 'Quick Actions',
@@ -152,9 +65,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         href: '/app/reports',
         icon: DollarSign,
       }
-    );
-
-    return items;
+    ];
   }, []);
 
   const filteredItems = useMemo(() => {

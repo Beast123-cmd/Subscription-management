@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const session = await apiClient.login(email, password);
+      localStorage.removeItem('revops_active_org_id');
       localStorage.setItem('revops_auth_token', session.accessToken);
       setToken(session.accessToken);
       setUser(session.user);

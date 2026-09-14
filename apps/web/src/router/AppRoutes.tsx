@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/contexts/OrgContext';
 import { usePermission } from '@/contexts/PermissionContext';
 import { PERMISSIONS } from '@/lib/permissions';
 import { AppShell } from '@/components/layout/AppShell';
@@ -74,6 +75,13 @@ function PermissionRoute({
   return <>{children}</>;
 }
 
+function OrganizationRoute({ children }: { children: React.ReactNode }) {
+  const { activeOrg, isLoadingOrganizations } = useOrganization();
+  if (isLoadingOrganizations) return <div className="p-8 text-sm text-slate-500">Loading organization...</div>;
+  if (!activeOrg) return <Navigate to="/select-organization" replace />;
+  return <>{children}</>;
+}
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -93,7 +101,9 @@ export function AppRoutes() {
         path="/app"
         element={
           <ProtectedRoute>
-            <AppShell />
+            <OrganizationRoute>
+              <AppShell />
+            </OrganizationRoute>
           </ProtectedRoute>
         }
       >

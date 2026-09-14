@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
+import { formatCurrency } from '@/lib/currency';
 import { useOrganization } from '@/contexts/OrgContext';
 import { cn } from '@/lib/utils';
 

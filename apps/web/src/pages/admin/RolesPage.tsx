@@ -1,9 +1,11 @@
 import React from 'react';
-import { ShieldCheck, Lock } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/data/DataTable';
 import { Badge } from '@/components/ui/badge';
-import { MOCK_USERS } from '@/lib/mock-data';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+import { useOrganization } from '@/contexts/OrgContext';
 
 interface RoleRow {
   id: string;
@@ -15,32 +17,20 @@ interface RoleRow {
 }
 
 export function RolesPage() {
-  const roles: RoleRow[] = [
-    {
-      id: 'role-1',
-      name: 'Organization Admin',
-      code: 'ADMIN',
-      isSystem: true,
-      description: 'Unrestricted administrative access to all platform domains and tenant configuration.',
-      permissionsCount: 20,
-    },
-    {
-      id: 'role-2',
-      name: 'Billing Manager',
-      code: 'BILLING_MANAGER',
-      isSystem: true,
-      description: 'Management of invoicing, payments, refunds, collections, and billing reports.',
-      permissionsCount: 14,
-    },
-    {
-      id: 'role-3',
-      name: 'Read-only User',
-      code: 'VIEWER',
-      isSystem: true,
-      description: 'Audit and inspection access across commercial records without mutation capabilities.',
-      permissionsCount: 8,
-    },
-  ];
+  const { activeOrg } = useOrganization();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['organization-roles', activeOrg?.id],
+    queryFn: () => apiClient.getOrganizationRoles(),
+    enabled: Boolean(activeOrg),
+  });
+  const roles: RoleRow[] = (data?.data ?? []).map((role) => ({
+    id: role.id,
+    name: role.name,
+    code: role.code,
+    isSystem: role.isSystem,
+    description: role.description ?? '',
+    permissionsCount: role.permissionsCount ?? 0,
+  }));
 
   const columns: ColumnDef<RoleRow>[] = [
     {
@@ -98,6 +88,9 @@ export function RolesPage() {
         columns={columns}
         data={roles}
         keyExtractor={(r) => r.id}
+        isLoading={isLoading}
+        isError={isError}
+        errorMessage={error instanceof Error ? error.message : undefined}
         emptyTitle="No roles found"
       />
     </div>

@@ -3,11 +3,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Organization } from '@/types';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from './ToastContext';
+import { useAuth } from './AuthContext';
 
 interface OrgContextValue {
   activeOrg: Organization | null;
   organizations: Organization[];
   isSwitchingOrg: boolean;
+  isLoadingOrganizations: boolean;
+  organizationError: string | null;
   selectOrganization: (orgId: string) => Promise<void>;
   reloadOrganizations: () => Promise<void>;
 }
@@ -18,33 +21,48 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrg, setActiveOrg] = useState<Organization | null>(null);
   const [isSwitchingOrg, setIsSwitchingOrg] = useState<boolean>(false);
+  const [isLoadingOrganizations, setIsLoadingOrganizations] = useState<boolean>(
+    () => Boolean(localStorage.getItem('revops_auth_token')),
+  );
+  const [organizationError, setOrganizationError] = useState<string | null>(null);
+  const { token, isLoading: isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
   const toast = useToast();
 
   const loadOrgs = useCallback(async () => {
+    if (!token) return;
+    setIsLoadingOrganizations(true);
+    setOrganizationError(null);
     try {
       const resp = await apiClient.getOrganizations();
       setOrganizations(resp.data);
       const storedOrgId = localStorage.getItem('revops_active_org_id');
-      const matched = resp.data.find((o) => o.id === storedOrgId) || resp.data[0];
-      if (matched) {
-        setActiveOrg(matched);
-        localStorage.setItem('revops_active_org_id', matched.id);
-      }
-    } catch {
+      setActiveOrg(resp.data.find((o) => o.id === storedOrgId) ?? null);
+    } catch (error) {
       setOrganizations([]);
       setActiveOrg(null);
+      setOrganizationError(error instanceof Error ? error.message : 'Unable to load organizations.');
+    } finally {
+      setIsLoadingOrganizations(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
-    loadOrgs();
-  }, [loadOrgs]);
+    if (isLoadingAuth) return;
+    if (token) {
+      void loadOrgs();
+    } else {
+      setOrganizations([]);
+      setActiveOrg(null);
+      setOrganizationError(null);
+      setIsLoadingOrganizations(false);
+    }
+  }, [isLoadingAuth, token, loadOrgs]);
 
   const selectOrganization = useCallback(
     async (orgId: string) => {
       const target = organizations.find((o) => o.id === orgId);
-      if (!target) return;
+      if (!target) throw new Error('Organization not found.');
 
       setIsSwitchingOrg(true);
       try {
@@ -65,6 +83,7 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Failed to switch organization.';
         toast.error(msg, 'Tenant Switch Error');
+        throw err;
       } finally {
         setTimeout(() => {
           setIsSwitchingOrg(false);
@@ -80,6 +99,8 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
         activeOrg,
         organizations,
         isSwitchingOrg,
+        isLoadingOrganizations,
+        organizationError,
         selectOrganization,
         reloadOrganizations: loadOrgs,
       }}
