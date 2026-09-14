@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User } from '@/types';
 import { apiClient } from '@/lib/api-client';
-import { MOCK_USERS } from '@/lib/mock-data';
 
 interface AuthContextValue {
   user: User | null;
@@ -18,7 +17,9 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('revops_auth_token'));
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem('revops_auth_token'),
+  );
   const [user, setUser] = useState<User | null>(null);
   const [roleName, setRoleName] = useState<string>('Organization Admin');
   const [permissions, setPermissions] = useState<string[]>(['*']);
@@ -29,31 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function initSession() {
       const storedToken = localStorage.getItem('revops_auth_token');
       if (!storedToken) {
-        // Auto-initialize with Admin demo user for seamless Phase 1 review if not logged in
-        const defaultDemo = MOCK_USERS[0];
-        if (defaultDemo) {
-          localStorage.setItem('revops_auth_token', defaultDemo.token);
-          setToken(defaultDemo.token);
-          setUser(defaultDemo.user);
-          setRoleName(defaultDemo.role);
-          setPermissions(defaultDemo.permissions);
-        }
         setIsLoading(false);
         return;
       }
 
       try {
-        const foundMock = MOCK_USERS.find((u) => u.token === storedToken);
-        if (foundMock) {
-          setUser(foundMock.user);
-          setRoleName(foundMock.role);
-          setPermissions(foundMock.permissions);
-        } else {
-          const currentUser = await apiClient.getCurrentUser();
-          setUser(currentUser);
-          setRoleName('Organization Admin');
-          setPermissions(['*']);
-        }
+        const currentUser = await apiClient.getCurrentUser();
+        setUser(currentUser);
+        setRoleName('Organization Admin');
+        setPermissions(['*']);
       } catch {
         localStorage.removeItem('revops_auth_token');
         setToken(null);
@@ -74,17 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(session.accessToken);
       setUser(session.user);
 
-      // Find role / permissions matching email
-      const matched = MOCK_USERS.find(
-        (u) => u.user.email.toLowerCase() === email.trim().toLowerCase()
-      );
-      if (matched) {
-        setRoleName(matched.role);
-        setPermissions(matched.permissions);
-      } else {
-        setRoleName('Organization Admin');
-        setPermissions(['*']);
-      }
+      setRoleName('Organization Admin');
+      setPermissions(['*']);
     } finally {
       setIsLoading(false);
     }
@@ -100,12 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setUserRole = useCallback((role: string) => {
-    const found = MOCK_USERS.find((u) => u.role === role);
-    if (found) {
-      setRoleName(found.role);
-      setPermissions(found.permissions);
-      setUser(found.user);
-    }
+    setRoleName(role);
   }, []);
 
   return (

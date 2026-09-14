@@ -35,6 +35,9 @@ export class AuthService {
         id: organization.id,
         name: organization.name,
         slug: organization.slug,
+        defaultCurrencyCode: organization.defaultCurrencyCode,
+        timezone: organization.timezone,
+        status: organization.status,
       })),
     };
   }
@@ -60,6 +63,9 @@ export class AuthService {
         id: organization.id,
         name: organization.name,
         slug: organization.slug,
+        defaultCurrencyCode: organization.defaultCurrencyCode,
+        timezone: organization.timezone,
+        status: organization.status,
       })),
     };
   }

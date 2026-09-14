@@ -77,7 +77,8 @@ class ApiClient {
           // ignore non-json response
         }
 
-        const message = errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+        const message =
+          errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
         const code = errorData.error?.code || `HTTP_${response.status}`;
         throw new ApiError(message, code, response.status, errorData.error?.details);
       }
@@ -96,79 +97,38 @@ class ApiClient {
   // Auth & Organizations
   // ==========================================
 
-  async login(email: string, _password: string): Promise<AuthSession> {
-    try {
-      return await this.request<AuthSession>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password: _password }),
-      });
-    } catch {
-      // Mock Fallback
-      const normalized = email.trim().toLowerCase();
-      const mockUser =
-        MOCK_USERS.find((u) => u.user.email.toLowerCase() === normalized) || MOCK_USERS[0];
-
-      if (!mockUser) {
-        throw new ApiError('Invalid email or password.', 'INVALID_CREDENTIALS', 401);
-      }
-
-      return {
-        accessToken: mockUser.token,
-        user: mockUser.user,
-        organizations: MOCK_ORGANIZATIONS.map((o) => ({
-          id: o.id,
-          name: o.name,
-          slug: o.slug,
-          defaultCurrencyCode: o.defaultCurrencyCode,
-          timezone: o.timezone,
-        })),
-        activeOrganizationId: MOCK_ORGANIZATIONS[0]?.id,
-      };
-    }
+  async login(email: string, password: string): Promise<AuthSession> {
+    return this.request<AuthSession>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
   }
 
   async getCurrentUser(): Promise<AuthSession['user']> {
-    try {
-      return await this.request<AuthSession['user']>('/auth/me');
-    } catch {
-      const token = this.getAuthToken();
-      const found = MOCK_USERS.find((u) => u.token === token) || MOCK_USERS[0];
-      if (!found) throw new ApiError('User unavailable', 'UNAUTHORIZED', 401);
-      return found.user;
-    }
+    return this.request<AuthSession['user']>('/auth/me');
   }
 
   async getOrganizations(): Promise<{ data: Organization[] }> {
-    try {
-      return await this.request<{ data: Organization[] }>('/organizations');
-    } catch {
-      return { data: MOCK_ORGANIZATIONS };
-    }
+    return this.request<{ data: Organization[] }>('/organizations');
   }
 
-  async selectOrganization(orgId: string): Promise<{ accessToken: string; activeOrganizationId: string }> {
-    try {
-      return await this.request<{ accessToken: string; activeOrganizationId: string }>(
-        `/organizations/${orgId}/select`,
-        { method: 'POST' }
-      );
-    } catch {
-      const targetOrg = MOCK_ORGANIZATIONS.find((o) => o.id === orgId);
-      if (!targetOrg) {
-        throw new ApiError('You do not have access to this organization.', 'FORBIDDEN', 403);
-      }
-      return {
-        accessToken: `jwt-mock-token-${orgId}`,
-        activeOrganizationId: orgId,
-      };
-    }
+  async selectOrganization(
+    orgId: string,
+  ): Promise<{ accessToken: string; activeOrganizationId: string }> {
+    return this.request<{ accessToken: string; activeOrganizationId: string }>(
+      `/organizations/${orgId}/select`,
+      { method: 'POST' },
+    );
   }
 
   // ==========================================
   // Customers
   // ==========================================
 
-  async getCustomers(_params?: { search?: string; status?: string }): Promise<PaginatedResponse<Customer>> {
+  async getCustomers(_params?: {
+    search?: string;
+    status?: string;
+  }): Promise<PaginatedResponse<Customer>> {
     try {
       return await this.request<PaginatedResponse<Customer>>('/customers');
     } catch {
@@ -184,7 +144,8 @@ class ApiClient {
       return await this.request<Customer>(`/customers/${id}`);
     } catch {
       const customer = MOCK_CUSTOMERS.find((c) => c.id === id || c.customerNumber === id);
-      if (!customer) throw new ApiError('Customer not found in active organization', 'NOT_FOUND', 404);
+      if (!customer)
+        throw new ApiError('Customer not found in active organization', 'NOT_FOUND', 404);
       return customer;
     }
   }

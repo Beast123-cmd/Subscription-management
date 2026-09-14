@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useQueryClient } from '@tanstack/react-query';
 import type { Organization } from '@/types';
 import { apiClient } from '@/lib/api-client';
-import { MOCK_ORGANIZATIONS } from '@/lib/mock-data';
 import { useToast } from './ToastContext';
 
 interface OrgContextValue {
@@ -16,7 +15,7 @@ interface OrgContextValue {
 const OrgContext = createContext<OrgContextValue | null>(null);
 
 export function OrgProvider({ children }: { children: React.ReactNode }) {
-  const [organizations, setOrganizations] = useState<Organization[]>(MOCK_ORGANIZATIONS);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrg, setActiveOrg] = useState<Organization | null>(null);
   const [isSwitchingOrg, setIsSwitchingOrg] = useState<boolean>(false);
   const queryClient = useQueryClient();
@@ -33,11 +32,8 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('revops_active_org_id', matched.id);
       }
     } catch {
-      // Fallback to mock
-      setOrganizations(MOCK_ORGANIZATIONS);
-      const matched = MOCK_ORGANIZATIONS[0]!;
-      setActiveOrg(matched);
-      localStorage.setItem('revops_active_org_id', matched.id);
+      setOrganizations([]);
+      setActiveOrg(null);
     }
   }, []);
 
@@ -64,7 +60,7 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
 
         toast.info(
           `Switched active tenant to ${target.name} (${target.defaultCurrencyCode} · ${target.timezone})`,
-          'Organization Changed'
+          'Organization Changed',
         );
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Failed to switch organization.';
@@ -75,7 +71,7 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
         }, 300);
       }
     },
-    [organizations, queryClient, toast]
+    [organizations, queryClient, toast],
   );
 
   return (
