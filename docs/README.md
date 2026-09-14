@@ -14,6 +14,7 @@ This directory is the implementation contract for the Subscription Management / 
 | [Development Workflow](DEVELOPMENT_WORKFLOW.md)                       | Shared dependencies, Neon environments, secrets, branches, and migrations    |
 | [Architecture Review](../PROJECT_ARCHITECTURE_AND_DATABASE_REVIEW.md) | Original design-gate review and ERD                                          |
 | [ADR 001](decisions/001-finalized-design-amendments.md)               | Approved lifecycle, tenancy, financial, timezone, and concurrency amendments |
+| [ADR 002](decisions/002-identity-tenancy-bootstrap.md)                | Identity normalization, tenant membership, and first-Admin bootstrap policy  |
 
 ## Governance
 

@@ -12,11 +12,11 @@ This is the target relational specification for business-schema phases. It does 
 
 ## Phase 3: identity and tenancy
 
-| Table                      | Required columns                                                                                                                       | Keys and constraints                                                                                 |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `organizations`            | `id`, `name VARCHAR(160)`, `slug VARCHAR(80)`, `default_currency_code CHAR(3)`, `timezone VARCHAR(64)`, `status organization_status`   | PK `id`; unique `slug`; status `ACTIVE/SUSPENDED/ARCHIVED`                                           |
-| `users`                    | `id`, `email CITEXT`, `password_hash TEXT`, `first_name VARCHAR(100)`, `last_name VARCHAR(100)`, `status user_status`, `last_login_at` | PK `id`; unique `email`; status `ACTIVE/INVITED/SUSPENDED`                                           |
-| `organization_memberships` | `id`, `organization_id`, `user_id`, `status membership_status`, `joined_at`                                                            | PK `id`; FK organization/user restrict; unique `(organization_id,user_id)`; index `(user_id,status)` |
+| Table                      | Required columns                                                                                                                             | Keys and constraints                                                                                 |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `organizations`            | `id`, `name VARCHAR(160)`, `slug VARCHAR(80)`, `default_currency_code CHAR(3)`, `timezone VARCHAR(64)`, `status organization_status`         | PK `id`; unique immutable lowercase slug; status `ACTIVE/SUSPENDED/ARCHIVED`                         |
+| `users`                    | `id`, `email VARCHAR(320)`, `password_hash TEXT`, `first_name VARCHAR(100)`, `last_name VARCHAR(100)`, `status user_status`, `last_login_at` | PK `id`; unique normalized lowercase email; status `ACTIVE/INVITED/SUSPENDED`                        |
+| `organization_memberships` | `id`, `organization_id`, `user_id`, `status membership_status`, `joined_at`                                                                  | PK `id`; FK organization/user restrict; unique `(organization_id,user_id)`; index `(user_id,status)` |
 
 For composite tenant foreign keys, each tenant-owned parent uses `UNIQUE (organization_id, id)`, even though `id` is already a primary key. This permits a child to reference the organization and parent together.
 
