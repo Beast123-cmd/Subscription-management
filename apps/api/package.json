@@ -7,7 +7,8 @@
     "build": "tsc -p tsconfig.json",
     "dev": "node --env-file=../../.env.local --import tsx --watch src/main.ts",
     "typecheck": "pnpm --filter @subscription-management/database build && tsc --noEmit -p tsconfig.json",
-    "bootstrap:admin": "node --env-file=../../.env.local --import tsx src/scripts/bootstrap-admin.ts"
+    "bootstrap:admin": "node --env-file=../../.env.local --import tsx src/scripts/bootstrap-admin.ts",
+    "seed:rbac": "node --env-file=../../.env.local --import tsx src/scripts/seed-rbac.ts"
   },
   "dependencies": {
     "@nestjs/jwt": "^11.0.0",

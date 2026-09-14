@@ -26,6 +26,19 @@ enum MembershipStatus {
   REVOKED
 }
 
+model Permission {
+  id              String           @id @default(uuid()) @db.Uuid
+  resource        String           @db.VarChar(64)
+  action          String           @db.VarChar(64)
+  code            String           @unique @db.VarChar(128)
+  description     String?          @db.VarChar(255)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
 model Organization {
   id                  String                     @id @default(uuid()) @db.Uuid
   name                String                     @db.VarChar(160)
@@ -36,6 +49,7 @@ model Organization {
   createdAt           DateTime                   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(6)
   memberships         OrganizationMembership[]
+  roles               Role[]
 
   @@map("organizations")
 }
@@ -65,9 +79,53 @@ model OrganizationMembership {
   updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   user           User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  roles          MembershipRole[]
 
   @@unique([organizationId, userId])
+  @@unique([organizationId, id])
   @@index([userId, status])
   @@index([organizationId, status])
   @@map("organization_memberships")
+}
+
+model Role {
+  id              String           @id @default(uuid()) @db.Uuid
+  organizationId  String           @map("organization_id") @db.Uuid
+  name            String           @db.VarChar(100)
+  code            String           @db.VarChar(100)
+  description     String?          @db.VarChar(255)
+  isSystem        Boolean          @default(false) @map("is_system")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  memberships     MembershipRole[]
+  permissions     RolePermission[]
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, id])
+  @@map("roles")
+}
+
+model MembershipRole {
+  organizationId String                  @map("organization_id") @db.Uuid
+  membershipId   String                  @map("membership_id") @db.Uuid
+  roleId         String                  @map("role_id") @db.Uuid
+  createdAt      DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  membership     OrganizationMembership  @relation(fields: [organizationId, membershipId], references: [organizationId, id], onDelete: Restrict)
+  role           Role                    @relation(fields: [organizationId, roleId], references: [organizationId, id], onDelete: Restrict)
+
+  @@id([membershipId, roleId])
+  @@index([organizationId, membershipId])
+  @@map("membership_roles")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
 }

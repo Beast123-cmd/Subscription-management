@@ -26,10 +26,10 @@ For composite tenant foreign keys, each tenant-owned parent uses `UNIQUE (organi
 | ------------------ | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `permissions`      | `id`, `resource VARCHAR(64)`, `action VARCHAR(64)`, `code VARCHAR(128)`, `description TEXT`                | PK; unique `code`                                                                            |
 | `roles`            | `id`, `organization_id`, `name VARCHAR(100)`, `code VARCHAR(100)`, `description TEXT`, `is_system BOOLEAN` | PK; FK organization restrict; unique `(organization_id,code)`; unique `(organization_id,id)` |
-| `membership_roles` | `membership_id`, `role_id`                                                                                 | composite PK; restrict FKs                                                                   |
+| `membership_roles` | `organization_id`, `membership_id`, `role_id`                                                              | composite PK `(membership_id,role_id)`; tenant-aware composite FKs; restrict FKs             |
 | `role_permissions` | `role_id`, `permission_id`                                                                                 | composite PK; restrict FKs                                                                   |
 
-Roles are tenant-local. System role templates are seeded into each organization rather than relying on nullable organization scope.
+Roles are tenant-local. `membership_roles` repeats the organization ID specifically to enforce that assigned roles and memberships share a tenant. System role templates are seeded into each organization rather than relying on nullable organization scope.
 
 ## Customer and catalog
 

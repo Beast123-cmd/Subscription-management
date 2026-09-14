@@ -34,6 +34,8 @@ List responses use `limit`, opaque `cursor`, allow-listed filters/sort, and stab
 
 Active organization is encoded in a newly issued short-lived JWT after selection. Tenant guards verify that token claim against the current active membership and organization in PostgreSQL on every tenant-scoped request; the claim alone never grants access.
 
+Permission grants are also read from PostgreSQL on every protected request. Routes declare required codes such as `customer.read` or `customer.create`; roles are tenant-local and are assigned to memberships. Role and permission claims are intentionally absent from the JWT, so membership revocations and grant changes apply immediately.
+
 ## Resource endpoints
 
 Standard CRUD applies only to editable resources. Each route requires domain permission and scopes data to the active organization.
