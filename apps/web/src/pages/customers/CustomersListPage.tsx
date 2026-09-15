@@ -65,7 +65,7 @@ export function CustomersListPage() {
       cell: (row) => (
         <div>
           <span className="font-medium text-slate-900 block">{row.displayName}</span>
-          <span className="text-[11px] text-slate-400 block">{row.legalName}</span>
+          <span className="text-sm text-slate-400 block">{row.legalName}</span>
         </div>
       ),
     },
@@ -91,7 +91,7 @@ export function CustomersListPage() {
       header: 'Currency',
       accessorKey: 'defaultCurrencyCode',
       cell: (row) => (
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
+        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-700">
           {row.defaultCurrencyCode}
         </span>
       ),

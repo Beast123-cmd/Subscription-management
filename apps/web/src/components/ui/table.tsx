@@ -53,7 +53,7 @@ export function TableHead({
   return (
     <th
       className={cn(
-        'h-9 px-3.5 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wider select-none',
+        'h-11 px-4 py-3 text-sm font-semibold text-slate-600 select-none',
         alignClass,
         className
       )}
@@ -79,7 +79,7 @@ export function TableCell({
   return (
     <td
       className={cn(
-        'px-3.5 py-2.5 text-xs text-slate-800 align-middle leading-normal',
+        'px-4 py-3.5 text-sm text-slate-800 align-middle leading-normal',
         alignClass,
         className
       )}

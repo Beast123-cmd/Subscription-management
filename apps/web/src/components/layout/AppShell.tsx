@@ -2,14 +2,19 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { useOrganization } from '@/contexts/OrgContext';
+import { useLocation } from 'react-router-dom';
 import { Sheet } from '@/components/ui/sheet';
 
 export function AppShell() {
+  const { activeOrg, isSwitchingOrg } = useOrganization();
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
+    <div className="app-shell flex h-dvh w-full overflow-hidden bg-[var(--workspace-canvas)]">
+      <a href="#workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-white focus:p-3">Skip to content</a>
       {/* Desktop Persistent Sidebar */}
       <Sidebar
         isCollapsed={isCollapsed}
@@ -39,9 +44,9 @@ export function AppShell() {
         <Header onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main id="workspace" tabIndex={-1} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl">
-            <Outlet />
+            <div key={`${activeOrg?.id}:${location.pathname}`} className="workspace-page">{!isSwitchingOrg && <Outlet />}</div>
           </div>
         </main>
       </div>

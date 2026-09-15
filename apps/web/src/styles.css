@@ -2,10 +2,16 @@
 
 @layer base {
   :root {
+    --workspace-canvas: #f6f7f9;
+    --workspace-surface: #ffffff;
+    --workspace-ink: #182230;
+    --workspace-accent: #4f46e5;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
+    color: var(--workspace-ink);
+    background: var(--workspace-canvas);
     font-family: var(--font-sans);
     letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
@@ -13,9 +19,28 @@
   }
 }
 
+:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+.brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 12px; background: #ffffff18; border: 1px solid #ffffff30; }
+.eyebrow { font-size: 11px; font-weight: 650; letter-spacing: .16em; }
+.login-layout { display: grid; min-height: 100dvh; grid-template-columns: 1.05fr 1fr; background: #fff; }
+.login-story { display: flex; flex-direction: column; justify-content: space-between; padding: clamp(32px, 5vw, 80px); color: white; background: radial-gradient(ellipse at 0% 100%, #5145b9 0, transparent 65%), #1e2549; }
+.login-story-copy { padding: 64px 0; }
+.login-story h1 { font-size: clamp(40px, 4.8vw, 76px); letter-spacing: -.055em; line-height: 1.08; margin-top: 24px; font-weight: 550; }
+.login-path { display:flex; gap: 32px; margin-top: 56px; padding-top: 24px; border-top: 1px solid #ffffff30; font-size: 12px; color:#a5b4fc; }
+.login-path b { display: block; margin-top:8px; font-size:16px; font-weight:500; color:white; }
+.login-entry { display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+.workspace-page { animation: workspace-enter 160ms ease-out; }
+@keyframes workspace-enter { from {opacity: .5; transform: translateY(4px)} to {opacity:1;transform:translateY(0)} }
+@media (max-width: 767px) { .login-layout {grid-template-columns:1fr} .login-story {padding:24px} .login-story-copy {padding:28px 0 0} .login-story h1 {font-size:36px} .login-story-copy > p:not(.eyebrow), .login-path, .login-story > p {display:none} .login-entry {padding:32px 24px} }
+@media print { .app-shell aside, .app-shell header, .app-shell button, .app-shell form {display:none!important} .app-shell, .app-shell main {height:auto;overflow:visible;background:white} }
 
 /* Custom scrollbars for dense enterprise data views */
 ::-webkit-scrollbar {

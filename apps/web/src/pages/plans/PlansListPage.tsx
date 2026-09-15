@@ -60,7 +60,7 @@ export function PlansListPage() {
       cell: (row) => (
         <div>
           <span className="font-medium text-slate-900 block">{row.name}</span>
-          <span className="text-[11px] text-slate-400 block truncate max-w-sm">{row.description}</span>
+          <span className="text-sm text-slate-400 block truncate max-w-sm">{row.description}</span>
         </div>
       ),
     },
@@ -74,7 +74,7 @@ export function PlansListPage() {
         return (
           <div className="text-right">
             <CurrencyDisplay amount={p.amount} currencyCode={p.currencyCode} align="right" />
-            <span className="text-[10px] text-slate-400 block">/ {p.billingPeriod.toLowerCase()}</span>
+            <span className="text-xs text-slate-400 block">/ {p.billingPeriod.toLowerCase()}</span>
           </div>
         );
       },

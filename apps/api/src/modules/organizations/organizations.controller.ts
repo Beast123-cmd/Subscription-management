@@ -32,6 +32,12 @@ export class OrganizationsController {
     return this.auth.listMembers(currentUser.activeOrganizationId);
   }
 
+  @Get('access')
+  @UseGuards(TenantGuard)
+  access(@CurrentUser() currentUser: { userId: string; activeOrganizationId: string }) {
+    return this.auth.getAccess(currentUser.userId, currentUser.activeOrganizationId);
+  }
+
   @Get('roles')
   @UseGuards(TenantGuard, PermissionGuard)
   @RequirePermissions('role.read')

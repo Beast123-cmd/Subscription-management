@@ -65,7 +65,8 @@ function PermissionRoute({
   permission: string;
   children: React.ReactNode;
 }) {
-  const { can } = usePermission();
+  const { can, isLoading } = usePermission();
+  if (isLoading) return <p role="status" className="p-6 text-slate-600">Loading workspace access…</p>;
 
   if (!can(permission)) {
     return <ForbiddenPage />;

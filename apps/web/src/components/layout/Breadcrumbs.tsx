@@ -20,6 +20,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
     if (items) return items;
 
     const pathnames = location.pathname.split('/').filter((x) => x && x !== 'app');
+    if (pathnames.length === 1 && pathnames[0] === 'dashboard') return [];
     const trail: BreadcrumbItem[] = [{ label: 'Dashboard', href: '/app/dashboard' }];
 
     let currentPath = '/app';

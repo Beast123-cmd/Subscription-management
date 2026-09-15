@@ -39,7 +39,7 @@ export function RolesPage() {
       accessorKey: 'name',
       sortable: true,
       cell: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <ShieldCheck className="h-4 w-4 text-slate-500" />
           <span className="font-semibold text-slate-900">{row.name}</span>
         </div>
@@ -49,7 +49,7 @@ export function RolesPage() {
       id: 'code',
       header: 'Code',
       accessorKey: 'code',
-      cell: (row) => <span className="font-mono text-[11px] text-slate-600">{row.code}</span>,
+      cell: (row) => <span className="font-mono text-sm text-slate-600">{row.code}</span>,
     },
     {
       id: 'description',

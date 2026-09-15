@@ -29,7 +29,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       'inline-flex items-center justify-center font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer';
 
     const variants = {
-      primary: 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:bg-slate-950',
+      primary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm active:bg-indigo-800',
       secondary: 'bg-slate-100 text-slate-800 hover:bg-slate-200 active:bg-slate-300',
       outline:
         'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-xs',
@@ -40,10 +40,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'h-8 px-2.5 text-xs gap-1.5',
-      md: 'h-9 px-3.5 text-sm gap-2',
-      lg: 'h-10 px-4 text-sm gap-2 font-semibold',
-      icon: 'h-8 w-8 p-0',
+      sm: 'h-10 px-3 text-sm gap-1.5',
+      md: 'h-11 px-4 text-sm gap-2',
+      lg: 'h-12 px-5 text-base gap-2 font-semibold',
+      icon: 'h-11 w-11 p-0',
     };
 
     return (

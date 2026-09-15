@@ -98,6 +98,17 @@ export class AuthService {
     }).then((data) => ({ data }));
   }
 
+  async getAccess(userId: string, organizationId: string) {
+    const membership = await this.prisma.organizationMembership.findFirst({
+      where: { userId, organizationId, status: 'ACTIVE' },
+      select: { roles: { select: { role: { select: { name: true, permissions: { select: { permission: { select: { code: true } } } } } } } } },
+    });
+    return {
+      roles: membership?.roles.map(({ role }) => role.name) ?? [],
+      permissions: [...new Set(membership?.roles.flatMap(({ role }) => role.permissions.map(({ permission }) => permission.code)) ?? [])],
+    };
+  }
+
   listRoles(organizationId: string) {
     return this.prisma.role.findMany({
       where: { organizationId },

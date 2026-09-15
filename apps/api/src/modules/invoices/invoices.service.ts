@@ -11,15 +11,30 @@ export class InvoicesService {
   async find(o: string, id: string) {
     const x = await this.p.invoice.findFirst({
       where: { id, organizationId: o },
-      include: { items: true },
+      include: { items: true, customer: { select: { displayName: true } }, payments: { where: { status: 'SUCCEEDED' }, select: { amount: true } }, refunds: { where: { status: 'SUCCEEDED' }, select: { amount: true } } },
     });
     if (!x) throw new NotFoundException('Invoice not found.');
-    return x;
+    return this.present(x);
   }
   list(o: string) {
     return this.p.invoice
-      .findMany({ where: { organizationId: o }, orderBy: { createdAt: 'desc' } })
-      .then((data) => ({ data }));
+      .findMany({ where: { organizationId: o }, include: { items: true, customer: { select: { displayName: true } }, payments: { where: { status: 'SUCCEEDED' }, select: { amount: true } }, refunds: { where: { status: 'SUCCEEDED' }, select: { amount: true } } }, orderBy: { createdAt: 'desc' } })
+      .then((data) => ({ data: data.map((invoice) => this.present(invoice)) }));
+  }
+  private present<T extends { status: string; grandTotal: Prisma.Decimal; subtotal: Prisma.Decimal; discountTotal: Prisma.Decimal; taxTotal: Prisma.Decimal; customer: { displayName: string }; items: { lineSubtotal: Prisma.Decimal; discountAmount: Prisma.Decimal; taxAmount: Prisma.Decimal; lineTotal: Prisma.Decimal }[]; payments: {amount: Prisma.Decimal}[]; refunds: {amount: Prisma.Decimal}[] }>(invoice: T) {
+    const sum = (rows: {amount: Prisma.Decimal}[]) => rows.reduce((total, row) => total.plus(row.amount), new Prisma.Decimal(0));
+    const amountPaid = sum(invoice.payments).minus(sum(invoice.refunds));
+    const totals = invoice.status === 'DRAFT' ? {
+      subtotal: invoice.items.reduce((sum, item) => sum.plus(item.lineSubtotal), new Prisma.Decimal(0)),
+      discountTotal: invoice.items.reduce((sum, item) => sum.plus(item.discountAmount), new Prisma.Decimal(0)),
+      taxTotal: invoice.items.reduce((sum, item) => sum.plus(item.taxAmount), new Prisma.Decimal(0)),
+      grandTotal: invoice.items.reduce((sum, item) => sum.plus(item.lineTotal), new Prisma.Decimal(0)),
+    } : { subtotal: invoice.subtotal, discountTotal: invoice.discountTotal, taxTotal: invoice.taxTotal, grandTotal: invoice.grandTotal };
+    const { payments, refunds, customer, ...record } = invoice;
+    void payments;
+    void refunds;
+    void customer;
+    return { ...record, ...totals, customerName: invoice.customer.displayName, amountPaid: amountPaid.toString(), amountDue: (invoice.status === 'FINALIZED' ? totals.grandTotal.minus(amountPaid) : new Prisma.Decimal(0)).toString() };
   }
   async yearlyTotals(o: string) {
     const organization = await this.p.organization.findUniqueOrThrow({
@@ -83,6 +98,7 @@ export class InvoicesService {
       if (i.discountId && !discount) throw new NotFoundException('Active discount not found.');
       if (i.taxId && !tax) throw new NotFoundException('Active tax not found.');
       const d = discount ? sub.mul(discount.rate).div(100) : new Prisma.Decimal(i.discountAmount ?? '0');
+      if (d.gt(sub)) throw new ConflictException('Discount cannot exceed the line subtotal.');
       const t = tax ? sub.minus(d).mul(tax.rate).div(100) : new Prisma.Decimal(i.taxAmount ?? '0');
       return tx.invoiceItem.create({
         data: {
@@ -121,9 +137,13 @@ export class InvoicesService {
     });
   }
   async void(o: string, id: string) {
-    const x = await this.find(o, id);
-    if (x.status !== 'FINALIZED')
-      throw new ConflictException('Only finalized invoices can be voided.');
-    return this.p.invoice.update({ where: { id }, data: { status: 'VOID', voidedAt: new Date() } });
+    return this.p.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM invoices WHERE id = ${id}::uuid AND organization_id = ${o}::uuid FOR UPDATE`;
+      const x = await tx.invoice.findFirst({ where: { id, organizationId: o } });
+      if (!x) throw new NotFoundException('Invoice not found.');
+      if (x.status !== 'FINALIZED') throw new ConflictException('Only finalized invoices can be voided.');
+      if (await tx.payment.count({where: {invoiceId: id, organizationId: o, status: 'SUCCEEDED'}})) throw new ConflictException('An invoice with payments cannot be voided.');
+      return tx.invoice.update({ where: { id }, data: { status: 'VOID', voidedAt: new Date() } });
+    });
   }
 }

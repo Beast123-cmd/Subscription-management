@@ -60,7 +60,7 @@ export function DashboardPage() {
         title="Revenue Operations Overview"
         description={`Operational dashboard for ${activeOrg?.name || 'Active Tenant'} (${activeOrg?.defaultCurrencyCode} · ${activeOrg?.timezone})`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             <Can permission={PERMISSIONS.CUSTOMER_CREATE}>
               <Button
                 variant="outline"
@@ -103,7 +103,7 @@ export function DashboardPage() {
                 {activeSubsCount}
               </span>
             )}
-            <span className="text-[11px] text-slate-400 block mt-0.5">
+            <span className="text-sm text-slate-400 block mt-0.5">
               Across enterprise accounts
             </span>
           </div>
@@ -131,7 +131,7 @@ export function DashboardPage() {
                 ))}
               </div>
             )}
-            <span className="text-[11px] text-slate-400 block mt-0.5">
+            <span className="text-sm text-slate-400 block mt-0.5">
               Finalized invoices issued in {invoiceSummary?.year ?? 'this year'}
             </span>
           </div>
@@ -161,7 +161,7 @@ export function DashboardPage() {
                 </span>
               </div>
             )}
-            <span className="text-[11px] text-slate-400 block mt-0.5">
+            <span className="text-sm text-slate-400 block mt-0.5">
               Requiring collections follow-up
             </span>
           </div>
@@ -179,7 +179,7 @@ export function DashboardPage() {
             <span className="text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
               {pendingQuotationsCount}
             </span>
-            <span className="text-[11px] text-slate-400 block mt-0.5">
+            <span className="text-sm text-slate-400 block mt-0.5">
               Awaiting customer acceptance
             </span>
           </div>
@@ -193,7 +193,7 @@ export function DashboardPage() {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div>
               <h3 className="text-sm font-semibold text-slate-900">Active Subscriptions</h3>
-              <p className="text-[11px] text-slate-500">Recent customer contracts & terms</p>
+              <p className="text-sm text-slate-500">Recent customer contracts & terms</p>
             </div>
             <Button
               variant="ghost"
@@ -214,7 +214,7 @@ export function DashboardPage() {
                 className="flex items-center justify-between py-3 hover:bg-slate-50/70 px-2 rounded-md transition-colors cursor-pointer"
               >
                 <div className="min-w-0 pr-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center flex-wrap gap-2">
                     <span className="font-semibold text-xs text-slate-900">
                       {sub.subscriptionNumber}
                     </span>
@@ -228,7 +228,7 @@ export function DashboardPage() {
                     currencyCode={sub.currencyCode}
                     align="right"
                   />
-                  <div className="text-[10px] text-slate-400 mt-0.5">
+                  <div className="text-xs text-slate-400 mt-0.5">
                     Start <DateDisplay date={sub.startDate} />
                   </div>
                 </div>
@@ -242,7 +242,7 @@ export function DashboardPage() {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div>
               <h3 className="text-sm font-semibold text-slate-900">Recent Invoices</h3>
-              <p className="text-[11px] text-slate-500">Billing milestones & settlement state</p>
+              <p className="text-sm text-slate-500">Billing milestones & settlement state</p>
             </div>
             <Button
               variant="ghost"
@@ -263,7 +263,7 @@ export function DashboardPage() {
                 className="flex items-center justify-between py-3 hover:bg-slate-50/70 px-2 rounded-md transition-colors cursor-pointer"
               >
                 <div className="min-w-0 pr-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center flex-wrap gap-2">
                     <span className="font-semibold text-xs text-slate-900">
                       {inv.invoiceNumber}
                     </span>
@@ -277,7 +277,7 @@ export function DashboardPage() {
                     currencyCode={inv.currencyCode}
                     align="right"
                   />
-                  <div className="text-[10px] text-slate-400 mt-0.5">
+                  <div className="text-xs text-slate-400 mt-0.5">
                     Due <DateDisplay date={inv.dueDate} />
                   </div>
                 </div>

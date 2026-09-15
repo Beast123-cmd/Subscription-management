@@ -16,12 +16,18 @@ import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Quotation } from '@/types';
 import { Input } from '@/components/ui/input';
+import { CustomerSelect } from '@/components/data/CustomerSelect';
 
 export function QuotationsListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [formOpen, setFormOpen] = useState(false); const [customerId, setCustomerId] = useState(''); const [description, setDescription] = useState(''); const [price, setPrice] = useState(''); const [validUntil, setValidUntil] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [customerId, setCustomerId] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [validUntil, setValidUntil] = useState('');
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -48,9 +54,7 @@ export function QuotationsListPage() {
       accessorKey: 'quotationNumber',
       sortable: true,
       cell: (row) => (
-        <span className="font-semibold text-slate-900 tabular-nums">
-          {row.quotationNumber}
-        </span>
+        <span className="font-semibold text-slate-900 tabular-nums">{row.quotationNumber}</span>
       ),
     },
     {
@@ -74,11 +78,7 @@ export function QuotationsListPage() {
       align: 'right',
       sortable: true,
       cell: (row) => (
-        <CurrencyDisplay
-          amount={row.grandTotal}
-          currencyCode={row.currencyCode}
-          align="right"
-        />
+        <CurrencyDisplay amount={row.grandTotal} currencyCode={row.currencyCode} align="right" />
       ),
     },
     {
@@ -116,7 +116,74 @@ export function QuotationsListPage() {
         }
       />
 
-      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createQuotation({ customerId, currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR', validUntil, items: [{ description, quantity: 1, unitPrice: price }] }); toast.success('Quotation created.', 'Success'); setFormOpen(false); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create quotation.', 'Quotation failed'); } }}><div className="mb-4 text-sm font-semibold">New quotation</div><div className="grid gap-3 md:grid-cols-4"><Input required placeholder="Customer ID" value={customerId} onChange={(e) => setCustomerId(e.target.value)} /><Input required placeholder="Line description" value={description} onChange={(e) => setDescription(e.target.value)} /><Input required placeholder="Unit price" value={price} onChange={(e) => setPrice(e.target.value)} /><Input required type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Create quotation</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
+      {formOpen && (
+        <form
+          className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (saving) return;
+            setSaving(true);
+            try {
+              await apiClient.createQuotation({
+                customerId,
+                currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR',
+                validUntil,
+                items: [{ description, quantity: 1, unitPrice: price }],
+              });
+              toast.success('Quotation created.', 'Success');
+              setFormOpen(false);
+              await refetch();
+            } catch (err) {
+              toast.error(
+                err instanceof Error ? err.message : 'Unable to create quotation.',
+                'Quotation failed',
+              );
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          <div className="mb-4 text-sm font-semibold">New quotation</div>
+          <div className="grid gap-3 md:grid-cols-4">
+            <CustomerSelect key={activeOrg?.id} value={customerId} onChange={setCustomerId} />
+            <Input
+              label="Line description"
+              required
+              placeholder="Describe the service or item"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <Input
+              label="Unit price"
+              inputMode="decimal"
+              required
+              placeholder="0.00"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+            <Input
+              label="Valid until"
+              required
+              type="date"
+              value={validUntil}
+              onChange={(e) => setValidUntil(e.target.value)}
+            />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Button type="submit" isLoading={saving}>
+              Create quotation
+            </Button>
+            <Button
+              type="button"
+              disabled={saving}
+              variant="secondary"
+              onClick={() => setFormOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}

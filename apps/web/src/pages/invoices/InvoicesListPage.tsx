@@ -16,13 +16,18 @@ import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Invoice } from '@/types';
 import { Input } from '@/components/ui/input';
+import { CustomerSelect } from '@/components/data/CustomerSelect';
 
 export function InvoicesListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [formOpen, setFormOpen] = useState(false); const [customerId, setCustomerId] = useState(''); const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10)); const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [formOpen, setFormOpen] = useState(false);
+  const [customerId, setCustomerId] = useState('');
+  const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -49,9 +54,7 @@ export function InvoicesListPage() {
       accessorKey: 'invoiceNumber',
       sortable: true,
       cell: (row) => (
-        <span className="font-semibold text-slate-900 tabular-nums">
-          {row.invoiceNumber}
-        </span>
+        <span className="font-semibold text-slate-900 tabular-nums">{row.invoiceNumber}</span>
       ),
     },
     {
@@ -59,9 +62,7 @@ export function InvoicesListPage() {
       header: 'Customer',
       accessorKey: 'customerName',
       sortable: true,
-      cell: (row) => (
-        <span className="font-medium text-slate-900">{row.customerName || '—'}</span>
-      ),
+      cell: (row) => <span className="font-medium text-slate-900">{row.customerName || '—'}</span>,
     },
     {
       id: 'issueDate',
@@ -84,11 +85,7 @@ export function InvoicesListPage() {
       align: 'right',
       sortable: true,
       cell: (row) => (
-        <CurrencyDisplay
-          amount={row.grandTotal}
-          currencyCode={row.currencyCode}
-          align="right"
-        />
+        <CurrencyDisplay amount={row.grandTotal} currencyCode={row.currencyCode} align="right" />
       ),
     },
     {
@@ -102,7 +99,9 @@ export function InvoicesListPage() {
           amount={row.amountDue}
           currencyCode={row.currencyCode}
           align="right"
-          className={parseFloat(row.amountDue) > 0 ? 'text-rose-600 font-semibold' : 'text-slate-500'}
+          className={
+            parseFloat(row.amountDue) > 0 ? 'text-rose-600 font-semibold' : 'text-slate-500'
+          }
         />
       ),
     },
@@ -134,7 +133,66 @@ export function InvoicesListPage() {
         }
       />
 
-      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createInvoice({ customerId, currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR', issueDate, dueDate }); toast.success('Invoice draft created.', 'Success'); setFormOpen(false); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create invoice.', 'Invoice failed'); } }}><div className="mb-4 text-sm font-semibold">Create draft invoice</div><div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Customer ID" value={customerId} onChange={(e) => setCustomerId(e.target.value)} /><Input required type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} /><Input required type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Create invoice</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
+      {formOpen && (
+        <form
+          className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (saving) return;
+            setSaving(true);
+            try {
+              await apiClient.createInvoice({
+                customerId,
+                currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR',
+                issueDate,
+                dueDate,
+              });
+              toast.success('Invoice draft created.', 'Success');
+              setFormOpen(false);
+              await refetch();
+            } catch (err) {
+              toast.error(
+                err instanceof Error ? err.message : 'Unable to create invoice.',
+                'Invoice failed',
+              );
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          <div className="mb-4 text-sm font-semibold">Create draft invoice</div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <CustomerSelect key={activeOrg?.id} value={customerId} onChange={setCustomerId} />
+            <Input
+              label="Issue date"
+              required
+              type="date"
+              value={issueDate}
+              onChange={(e) => setIssueDate(e.target.value)}
+            />
+            <Input
+              label="Due date"
+              required
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Button type="submit" isLoading={saving}>
+              Create invoice
+            </Button>
+            <Button
+              type="button"
+              disabled={saving}
+              variant="secondary"
+              onClick={() => setFormOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}
@@ -181,7 +239,11 @@ export function InvoicesListPage() {
                   id: 'finalize',
                   label: 'Finalize invoice',
                   icon: <CheckCheck className="h-3.5 w-3.5" />,
-                  onClick: () => toast.success(`Invoice ${row.invoiceNumber} finalized successfully.`, 'Invoice Finalized'),
+                  onClick: () =>
+                    toast.success(
+                      `Invoice ${row.invoiceNumber} finalized successfully.`,
+                      'Invoice Finalized',
+                    ),
                 },
               ]
             : []),
@@ -191,7 +253,8 @@ export function InvoicesListPage() {
                   id: 'payment',
                   label: 'Record payment',
                   icon: <DollarSign className="h-3.5 w-3.5" />,
-                  onClick: () => toast.info(`Record payment for ${row.invoiceNumber}`, 'Record Payment'),
+                  onClick: () =>
+                    toast.info(`Record payment for ${row.invoiceNumber}`, 'Record Payment'),
                 },
               ]
             : []),
@@ -202,7 +265,8 @@ export function InvoicesListPage() {
                   label: 'Void invoice',
                   icon: <Ban className="h-3.5 w-3.5" />,
                   destructive: true,
-                  onClick: () => toast.warning(`Invoice ${row.invoiceNumber} marked as void.`, 'Invoice Voided'),
+                  onClick: () =>
+                    toast.warning(`Invoice ${row.invoiceNumber} marked as void.`, 'Invoice Voided'),
                 },
               ]
             : []),

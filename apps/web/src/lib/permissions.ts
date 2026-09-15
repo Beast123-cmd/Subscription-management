@@ -33,14 +33,14 @@ export const PERMISSIONS = {
   // Invoices & Payments
   INVOICE_READ: 'invoice.read',
   INVOICE_CREATE: 'invoice.create',
-  INVOICE_FINALIZE: 'invoice.finalize',
-  INVOICE_VOID: 'invoice.void',
+  INVOICE_FINALIZE: 'invoice.update',
+  INVOICE_VOID: 'invoice.update',
   PAYMENT_READ: 'payment.read',
   PAYMENT_CREATE: 'payment.create',
-  PAYMENT_REFUND: 'payment.refund',
+  PAYMENT_REFUND: 'payment.create',
 
   // Insights & Audit
-  REPORT_READ: 'report.read',
+  REPORT_READ: 'invoice.read',
   AUDIT_READ: 'audit.read',
 } as const;
 

@@ -13,6 +13,7 @@ import { Can } from '@/components/auth/Can';
 import { PERMISSIONS } from '@/lib/permissions';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/contexts/ToastContext';
+import { InvoiceLineForm } from './InvoiceLineForm';
 
 export function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +59,7 @@ export function InvoiceDetailPage() {
           { label: invoice.invoiceNumber },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -119,10 +120,11 @@ export function InvoiceDetailPage() {
         }
       />
 
+      {invoice.status === 'DRAFT' && <Can permission="invoice.update"><InvoiceLineForm key={invoice.id} invoiceId={invoice.id} currencyCode={invoice.currencyCode} /></Can>}
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Grand Total
           </span>
           <div className="mt-1">
@@ -135,7 +137,7 @@ export function InvoiceDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Amount Paid
           </span>
           <div className="mt-1">
@@ -148,7 +150,7 @@ export function InvoiceDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Amount Due
           </span>
           <div className="mt-1">
@@ -161,7 +163,7 @@ export function InvoiceDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Due Date
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -198,7 +200,7 @@ export function InvoiceDetailPage() {
                 <th className="py-2.5">Description</th>
                 <th className="py-2.5 text-center w-20">Qty</th>
                 <th className="py-2.5 text-right w-32">Unit Price</th>
-                <th className="py-2.5 text-right w-32">Tax (GST)</th>
+                <th className="py-2.5 text-right w-32">Tax</th>
                 <th className="py-2.5 text-right w-36">Line Total</th>
               </tr>
             </thead>

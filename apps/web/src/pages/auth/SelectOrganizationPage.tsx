@@ -67,17 +67,17 @@ export function SelectOrganizationPage() {
                     <Building className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center flex-wrap gap-2">
                       <span className="font-semibold text-xs text-slate-900 truncate">
                         {org.name}
                       </span>
                       {isActive && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
                           <Check className="h-3 w-3 text-emerald-600" /> Active
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-sm text-slate-400 mt-0.5">
                       {org.defaultCurrencyCode} · {org.timezone}
                     </p>
                   </div>

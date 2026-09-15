@@ -67,7 +67,7 @@ export function UsersPage() {
       header: 'Assigned Role',
       accessorKey: 'role',
       cell: (row) => (
-        <span className="inline-flex items-center gap-1.5 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-800">
+        <span className="inline-flex items-center gap-1.5 rounded bg-slate-100 px-2 py-0.5 text-sm font-medium text-slate-800">
           <Shield className="h-3 w-3 text-slate-500" />
           {row.role}
         </span>

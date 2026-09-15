@@ -16,13 +16,21 @@ import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Subscription } from '@/types';
 import { Input } from '@/components/ui/input';
+import { PlanSelect } from '@/components/data/PlanSelect';
+import { Select } from '@/components/ui/select';
+import { CustomerSelect } from '@/components/data/CustomerSelect';
 
 export function SubscriptionsListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [formOpen, setFormOpen] = useState(false); const [customerId, setCustomerId] = useState(''); const [planId, setPlanId] = useState(''); const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [formOpen, setFormOpen] = useState(false);
+  const [customerId, setCustomerId] = useState('');
+  const [planId, setPlanId] = useState('');
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [billingPeriod, setBillingPeriod] = useState<'MONTHLY' | 'QUARTERLY' | 'ANNUAL'>('MONTHLY');
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -50,9 +58,7 @@ export function SubscriptionsListPage() {
       accessorKey: 'subscriptionNumber',
       sortable: true,
       cell: (row) => (
-        <span className="font-semibold text-slate-900 tabular-nums">
-          {row.subscriptionNumber}
-        </span>
+        <span className="font-semibold text-slate-900 tabular-nums">{row.subscriptionNumber}</span>
       ),
     },
     {
@@ -60,15 +66,15 @@ export function SubscriptionsListPage() {
       header: 'Customer',
       accessorKey: 'customerName',
       sortable: true,
-      cell: (row) => (
-        <span className="font-medium text-slate-900">{row.customerName || '—'}</span>
-      ),
+      cell: (row) => <span className="font-medium text-slate-900">{row.customerName || '—'}</span>,
     },
     {
       id: 'planName',
       header: 'Plan Offering',
       accessorKey: 'planName',
-      cell: (row) => <span className="text-xs text-slate-700">{row.planName || 'Custom Plan'}</span>,
+      cell: (row) => (
+        <span className="text-xs text-slate-700">{row.planName || 'Custom Plan'}</span>
+      ),
     },
     {
       id: 'status',
@@ -91,11 +97,7 @@ export function SubscriptionsListPage() {
       align: 'right',
       sortable: true,
       cell: (row) => (
-        <CurrencyDisplay
-          amount={row.amount || '0'}
-          currencyCode={row.currencyCode}
-          align="right"
-        />
+        <CurrencyDisplay amount={row.amount || '0'} currencyCode={row.currencyCode} align="right" />
       ),
     },
   ];
@@ -119,7 +121,72 @@ export function SubscriptionsListPage() {
         }
       />
 
-      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createSubscription({ customerId, planId, currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR', billingPeriod: 'MONTHLY', startDate, billingStartDate: startDate }); toast.success('Subscription created.', 'Success'); setFormOpen(false); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create subscription.', 'Subscription failed'); } }}><div className="mb-4 text-sm font-semibold">New subscription</div><div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Customer ID" value={customerId} onChange={(e) => setCustomerId(e.target.value)} /><Input required placeholder="Plan ID" value={planId} onChange={(e) => setPlanId(e.target.value)} /><Input required type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Create subscription</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
+      {formOpen && (
+        <form
+          className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (saving) return;
+            setSaving(true);
+            try {
+              await apiClient.createSubscription({
+                customerId,
+                planId,
+                currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR',
+                billingPeriod,
+                startDate,
+                billingStartDate: startDate,
+              });
+              toast.success('Subscription created.', 'Success');
+              setFormOpen(false);
+              await refetch();
+            } catch (err) {
+              toast.error(
+                err instanceof Error ? err.message : 'Unable to create subscription.',
+                'Subscription failed',
+              );
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          <div className="mb-4 text-sm font-semibold">New subscription</div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <CustomerSelect key={activeOrg?.id} value={customerId} onChange={setCustomerId} />
+            <PlanSelect key={activeOrg?.id} value={planId} onChange={setPlanId} />
+            <Select
+              label="Billing period"
+              value={billingPeriod}
+              onChange={(e) => setBillingPeriod(e.target.value as typeof billingPeriod)}
+              options={[
+                { value: 'MONTHLY', label: 'Monthly' },
+                { value: 'QUARTERLY', label: 'Quarterly' },
+                { value: 'ANNUAL', label: 'Annual' },
+              ]}
+            />
+            <Input
+              label="Start date"
+              required
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Button type="submit" isLoading={saving}>
+              Create subscription
+            </Button>
+            <Button
+              type="button"
+              disabled={saving}
+              variant="secondary"
+              onClick={() => setFormOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}
@@ -164,7 +231,8 @@ export function SubscriptionsListPage() {
                   id: 'pause',
                   label: 'Pause subscription',
                   icon: <PauseCircle className="h-3.5 w-3.5" />,
-                  onClick: () => toast.warning(`Paused ${row.subscriptionNumber}`, 'Subscription Paused'),
+                  onClick: () =>
+                    toast.warning(`Paused ${row.subscriptionNumber}`, 'Subscription Paused'),
                 },
               ]
             : []),
@@ -174,7 +242,8 @@ export function SubscriptionsListPage() {
                   id: 'resume',
                   label: 'Resume subscription',
                   icon: <PlayCircle className="h-3.5 w-3.5" />,
-                  onClick: () => toast.success(`Resumed ${row.subscriptionNumber}`, 'Subscription Resumed'),
+                  onClick: () =>
+                    toast.success(`Resumed ${row.subscriptionNumber}`, 'Subscription Resumed'),
                 },
               ]
             : []),
@@ -183,7 +252,8 @@ export function SubscriptionsListPage() {
             label: 'Cancel subscription',
             icon: <XCircle className="h-3.5 w-3.5" />,
             destructive: true,
-            onClick: () => toast.error(`Cancelled ${row.subscriptionNumber}`, 'Subscription Cancelled'),
+            onClick: () =>
+              toast.error(`Cancelled ${row.subscriptionNumber}`, 'Subscription Cancelled'),
           },
         ]}
         emptyTitle="No subscriptions yet"
@@ -193,7 +263,7 @@ export function SubscriptionsListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Subscription creation modal ready for Phase 9.', 'Create Subscription')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               Create Subscription

@@ -58,7 +58,7 @@ export function PlanDetailPage() {
           { label: plan.planCode },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -81,7 +81,7 @@ export function PlanDetailPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Plan Code
           </span>
           <span className="text-base font-semibold text-slate-900 tabular-nums mt-1 block">
@@ -90,7 +90,7 @@ export function PlanDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Min Quantity
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -99,7 +99,7 @@ export function PlanDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Pausable
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -108,7 +108,7 @@ export function PlanDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Auto-Close
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -145,7 +145,7 @@ export function PlanDetailPage() {
                   <span className="font-semibold text-slate-900 block">
                     {prc.billingPeriod} ({prc.currencyCode})
                   </span>
-                  <span className="text-slate-400 text-[11px]">
+                  <span className="text-slate-400 text-sm">
                     Effective from: <DateDisplay date={prc.effectiveFrom} /> · Until: {prc.effectiveUntil ? <DateDisplay date={prc.effectiveUntil} /> : 'Open-ended'}
                   </span>
                 </div>

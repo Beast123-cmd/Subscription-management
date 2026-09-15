@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowUpDown,
   ArrowUp,
@@ -19,6 +20,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { Pagination } from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
+import { compareDecimal } from '@/lib/decimal-sort';
 
 export interface ColumnDef<T> {
   id: string;
@@ -69,6 +71,8 @@ export function DataTable<T>({
   pageSize = 10,
   className,
 }: DataTableProps<T>) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,6 +97,10 @@ export function DataTable<T>({
         return sortOrder === 'asc' ? valA - valB : valB - valA;
       }
 
+      if (typeof valA === 'string' && typeof valB === 'string' && /^\d+(\.\d+)?$/.test(valA) && /^\d+(\.\d+)?$/.test(valB)) {
+        return compareDecimal(valA, valB) * (sortOrder === 'asc' ? 1 : -1);
+      }
+
       return sortOrder === 'asc'
         ? String(valA).localeCompare(String(valB))
         : String(valB).localeCompare(String(valA));
@@ -101,10 +109,11 @@ export function DataTable<T>({
 
   // Pagination
   const totalPages = Math.ceil(sortedData.length / rowsPerPage) || 1;
+  const visiblePage = Math.min(currentPage, totalPages);
   const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage;
+    const start = (visiblePage - 1) * rowsPerPage;
     return sortedData.slice(start, start + rowsPerPage);
-  }, [sortedData, currentPage, rowsPerPage]);
+  }, [sortedData, visiblePage, rowsPerPage]);
 
   const handleSort = (columnId: string) => {
     if (sortKey === columnId) {
@@ -189,6 +198,7 @@ export function DataTable<T>({
               return (
                 <TableHead
                   key={col.id}
+                  aria-sort={isSorted ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                   align={col.align}
                   style={col.width ? { width: col.width } : undefined}
                 >
@@ -263,7 +273,7 @@ export function DataTable<T>({
 
                   {columns.map((col) => (
                     <TableCell key={col.id} align={col.align}>
-                      {col.cell
+                      {onRowClick && col.id === columns[0]?.id ? <a href={`${location.pathname}/${rowId}`} onClick={(event) => { event.stopPropagation(); if (!event.metaKey && !event.ctrlKey) {event.preventDefault(); navigate(`${location.pathname}/${rowId}`);} }} className="font-semibold text-indigo-700 hover:underline">{col.cell ? col.cell(row) : String(col.accessorKey ? row[col.accessorKey] ?? 'View record' : 'View record')}</a> : col.cell
                         ? col.cell(row)
                         : col.accessorKey
                         ? String(row[col.accessorKey] ?? '—')
@@ -296,7 +306,7 @@ export function DataTable<T>({
 
       {!isLoading && sortedData.length > 0 && (
         <Pagination
-          currentPage={currentPage}
+          currentPage={visiblePage}
           totalPages={totalPages}
           totalItems={sortedData.length}
           pageSize={rowsPerPage}

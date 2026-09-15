@@ -60,7 +60,7 @@ export function SubscriptionDetailPage() {
           { label: subscription.subscriptionNumber },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -119,7 +119,7 @@ export function SubscriptionDetailPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Contract Total
           </span>
           <div className="mt-1">
@@ -132,7 +132,7 @@ export function SubscriptionDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Start Date
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -141,7 +141,7 @@ export function SubscriptionDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Billing Terms
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -150,7 +150,7 @@ export function SubscriptionDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Auto-Renewal
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -210,7 +210,7 @@ export function SubscriptionDetailPage() {
               <div key={item.id} className="py-2.5 flex items-center justify-between">
                 <div>
                   <span className="font-medium text-slate-900 block">{item.descriptionSnapshot}</span>
-                  <span className="text-slate-400 text-[11px]">Qty: {item.quantity}</span>
+                  <span className="text-slate-400 text-sm">Qty: {item.quantity}</span>
                 </div>
                 <CurrencyDisplay amount={item.unitPrice} currencyCode={item.currencyCode} />
               </div>
@@ -227,7 +227,7 @@ export function SubscriptionDetailPage() {
               <div key={ev.id} className="flex items-start gap-3 text-xs border-l-2 border-slate-300 pl-3 py-1">
                 <div>
                   <span className="font-semibold text-slate-900 block">{ev.eventType}</span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-sm text-slate-400">
                     by {ev.actorName || 'System'} · <DateDisplay date={ev.occurredAt} mode="datetime" />
                   </span>
                 </div>

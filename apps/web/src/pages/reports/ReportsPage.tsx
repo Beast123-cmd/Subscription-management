@@ -48,7 +48,7 @@ export function ReportsPage() {
               <div className="mt-2">
                 <CurrencyDisplay amount="1179000.0000" currencyCode={activeOrg?.defaultCurrencyCode} className="text-2xl font-bold" />
               </div>
-              <span className="text-[11px] text-emerald-600 font-medium block mt-1">+14.2% vs previous period</span>
+              <span className="text-sm text-emerald-600 font-medium block mt-1">+14.2% vs previous period</span>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
@@ -56,7 +56,7 @@ export function ReportsPage() {
               <div className="mt-2">
                 <CurrencyDisplay amount="1041200.0000" currencyCode={activeOrg?.defaultCurrencyCode} className="text-2xl font-bold text-slate-900" />
               </div>
-              <span className="text-[11px] text-slate-400 block mt-1">Settled via wire transfer & card</span>
+              <span className="text-sm text-slate-400 block mt-1">Settled via wire transfer & card</span>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
@@ -64,7 +64,7 @@ export function ReportsPage() {
               <div className="mt-2">
                 <CurrencyDisplay amount="10000.0000" currencyCode={activeOrg?.defaultCurrencyCode} className="text-2xl font-bold text-amber-600" />
               </div>
-              <span className="text-[11px] text-slate-400 block mt-1">&lt; 1% of settled volume</span>
+              <span className="text-sm text-slate-400 block mt-1">&lt; 1% of settled volume</span>
             </div>
           </div>
 

@@ -10,6 +10,7 @@ import {
   Settings,
   User as UserIcon,
 } from 'lucide-react';
+import { usePermission } from '@/contexts/PermissionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrgContext';
 import { Dropdown } from '@/components/ui/dropdown';
@@ -20,7 +21,8 @@ export interface HeaderProps {
 }
 
 export function Header({ onOpenMobileMenu }: HeaderProps) {
-  const { user, logout, roleName } = useAuth();
+  const { user, logout } = useAuth();
+  const { roleName } = usePermission();
   const { activeOrg, organizations, selectOrganization } = useOrganization();
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const navigate = useNavigate();
@@ -39,7 +41,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex h-14 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur-xs">
+      <header className="sticky top-0 z-20 flex h-18 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur-xs">
         <div className="flex items-center gap-3">
           {/* Mobile Sidebar Toggle */}
           <button
@@ -101,8 +103,8 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
           >
             <div className="flex items-center gap-2">
               <Search className="h-3.5 w-3.5 text-slate-400" />
-              <span className="hidden sm:inline">Search customers, invoices, subscriptions...</span>
-              <span className="sm:hidden">Search...</span>
+              <span className="hidden sm:inline">Go to a page…</span>
+              <span className="sm:hidden">Navigate…</span>
             </div>
             <kbd className="hidden sm:inline-flex items-center rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
               ⌘ K

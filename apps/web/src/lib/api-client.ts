@@ -31,6 +31,10 @@ export class ApiError extends Error {
 class ApiClient {
   private baseUrl = '/api';
 
+  getAccess(): Promise<{ roles: string[]; permissions: string[] }> { return this.request('/organizations/access'); }
+  command(path: string, body?: unknown): Promise<unknown> { return this.request(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) }); }
+  getRules(kind: 'taxes' | 'discounts'): Promise<{ data: Array<{ id: string; name: string; rate: string; status: string }> }> { return this.request(`/${kind}`); }
+
   private getAuthToken(): string | null {
     return localStorage.getItem('revops_auth_token');
   }
@@ -199,6 +203,10 @@ class ApiClient {
 
   async getInvoice(id: string): Promise<Invoice> {
     return this.request<Invoice>(`/invoices/${id}`);
+  }
+
+  async addInvoiceLine(id: string, input: { description: string; quantity: number; unitPrice: string }): Promise<unknown> {
+    return this.request(`/invoices/${id}/items`, { method: 'POST', body: JSON.stringify(input) });
   }
 
   async getPayments(): Promise<PaginatedResponse<Payment>> {

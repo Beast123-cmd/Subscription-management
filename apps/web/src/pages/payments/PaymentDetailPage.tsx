@@ -58,7 +58,7 @@ export function PaymentDetailPage() {
           { label: payment.paymentNumber },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -85,7 +85,7 @@ export function PaymentDetailPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Payment Amount
           </span>
           <div className="mt-1">
@@ -98,7 +98,7 @@ export function PaymentDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Settlement Date
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -107,7 +107,7 @@ export function PaymentDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Payment Method
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block">
@@ -116,7 +116,7 @@ export function PaymentDetailPage() {
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+          <span className="text-sm font-medium text-slate-400 uppercase tracking-wider block">
             Reference / UTR
           </span>
           <span className="text-base font-semibold text-slate-900 mt-1 block font-mono text-xs">

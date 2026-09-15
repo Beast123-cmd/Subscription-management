@@ -135,6 +135,7 @@ const NAV_SECTIONS: NavSection[] = [
         icon: Building,
         permission: PERMISSIONS.ORGANIZATION_READ,
       },
+      { label: 'Taxes & Discounts', href: '/app/rules', icon: Receipt, permission: 'tax.read' },
     ],
   },
 ];
@@ -158,23 +159,23 @@ export function Sidebar({
     <aside
       className={cn(
         'relative flex flex-col border-r border-slate-200 bg-white transition-all duration-200 select-none z-30',
-        isCollapsed ? 'w-16' : 'w-60',
+        isCollapsed ? 'w-16' : 'w-64',
         className
       )}
     >
       {/* Brand Header */}
-      <div className="flex h-14 items-center justify-between px-3.5 border-b border-slate-100">
+      <div className="flex h-18 items-center justify-between px-3.5 border-b border-slate-100">
         {!isCollapsed && (
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white font-semibold text-xs shadow-xs">
               RO
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-xs text-slate-900 tracking-tight leading-tight">
-                RevOps Platform
+              <span className="font-semibold text-lg text-slate-900 tracking-tight leading-tight">
+                RevOps
               </span>
-              <span className="text-[10px] text-slate-500 font-medium leading-tight">
-                Subscription Cloud
+              <span className="text-xs text-slate-500 font-medium leading-tight">
+                Revenue workspace
               </span>
             </div>
           </div>
@@ -226,9 +227,9 @@ export function Sidebar({
                     onClick={onCloseMobile}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors group relative',
+                        'flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium transition-colors group relative',
                         isActive
-                          ? 'bg-slate-100 text-slate-900 font-semibold'
+                          ? 'bg-indigo-50 text-indigo-700 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                         isCollapsed && 'justify-center px-0'
                       )
