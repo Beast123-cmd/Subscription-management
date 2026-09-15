@@ -15,12 +15,14 @@ import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Subscription } from '@/types';
+import { Input } from '@/components/ui/input';
 
 export function SubscriptionsListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [formOpen, setFormOpen] = useState(false); const [customerId, setCustomerId] = useState(''); const [planId, setPlanId] = useState(''); const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -108,7 +110,7 @@ export function SubscriptionsListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Subscription creation workflow ready for Phase 9.', 'New Subscription')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               New Subscription
@@ -117,6 +119,7 @@ export function SubscriptionsListPage() {
         }
       />
 
+      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createSubscription({ customerId, planId, currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR', billingPeriod: 'MONTHLY', startDate, billingStartDate: startDate }); toast.success('Subscription created.', 'Success'); setFormOpen(false); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create subscription.', 'Subscription failed'); } }}><div className="mb-4 text-sm font-semibold">New subscription</div><div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Customer ID" value={customerId} onChange={(e) => setCustomerId(e.target.value)} /><Input required placeholder="Plan ID" value={planId} onChange={(e) => setPlanId(e.target.value)} /><Input required type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Create subscription</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}

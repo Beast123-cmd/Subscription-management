@@ -14,11 +14,13 @@ import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Plan } from '@/types';
+import { Input } from '@/components/ui/input';
 
 export function PlansListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [formOpen, setFormOpen] = useState(false); const [code, setCode] = useState(''); const [name, setName] = useState('');
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -96,7 +98,7 @@ export function PlansListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Plan creation enabled in Phase 8.', 'Create Plan')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               Create Plan
@@ -105,6 +107,7 @@ export function PlansListPage() {
         }
       />
 
+      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createPlan({ planCode: code, name }); toast.success('Plan created.', 'Success'); setFormOpen(false); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create plan.', 'Plan failed'); } }}><div className="mb-4 text-sm font-semibold">Create plan</div><div className="grid gap-3 md:grid-cols-2"><Input required placeholder="Plan code" value={code} onChange={(e) => setCode(e.target.value)} /><Input required placeholder="Plan name" value={name} onChange={(e) => setName(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Create plan</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}

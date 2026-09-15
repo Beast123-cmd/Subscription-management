@@ -15,11 +15,13 @@ import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Product } from '@/types';
+import { Input } from '@/components/ui/input';
 
 export function ProductsListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [formOpen, setFormOpen] = useState(false); const [code, setCode] = useState(''); const [name, setName] = useState(''); const [price, setPrice] = useState('0');
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -111,7 +113,7 @@ export function ProductsListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Product creation ready for Phase 7.', 'Create Product')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               Add Product
@@ -120,6 +122,7 @@ export function ProductsListPage() {
         }
       />
 
+      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createProduct({ productCode: code, name, productType: 'SERVICE', costPrice: price, costCurrencyCode: activeOrg?.defaultCurrencyCode ?? 'INR' }); toast.success('Product created.', 'Success'); setFormOpen(false); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create product.', 'Product failed'); } }}><div className="mb-4 text-sm font-semibold">Add product</div><div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Product code" value={code} onChange={(e) => setCode(e.target.value)} /><Input required placeholder="Product name" value={name} onChange={(e) => setName(e.target.value)} /><Input required placeholder="Cost price" value={price} onChange={(e) => setPrice(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Create product</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}

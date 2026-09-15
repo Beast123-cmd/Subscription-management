@@ -8,7 +8,6 @@ import {
   Building,
   LogOut,
   Settings,
-  Shield,
   User as UserIcon,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,10 +20,9 @@ export interface HeaderProps {
 }
 
 export function Header({ onOpenMobileMenu }: HeaderProps) {
-  const { user, logout, roleName, setUserRole } = useAuth();
+  const { user, logout, roleName } = useAuth();
   const { activeOrg, organizations, selectOrganization } = useOrganization();
   const [isCommandOpen, setIsCommandOpen] = useState(false);
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
   const navigate = useNavigate();
 
   // Keyboard shortcut listener for Cmd+K / Ctrl+K
@@ -114,52 +112,14 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
 
         {/* Right: Notifications & User Menu */}
         <div className="flex items-center gap-2">
-          {/* Notifications Dropdown */}
-          <Dropdown
-            align="right"
-            width="w-80"
-            trigger={
-              <button
-                className="relative p-2 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-                aria-label="Notifications"
-                onClick={() => setHasUnreadNotifications(false)}
-              >
-                <Bell className="h-4 w-4" />
-                {hasUnreadNotifications && (
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
-                )}
-              </button>
-            }
+          <button
+            className="p-2 rounded-md text-slate-300 cursor-not-allowed"
+            aria-label="Notifications are not available yet"
+            title="Notifications are not available yet"
+            disabled
           >
-            <div className="p-3 border-b border-slate-100 flex items-center justify-between">
-              <h5 className="font-semibold text-xs text-slate-900">Notifications</h5>
-              <span className="text-[10px] text-slate-400">Platform Activity</span>
-            </div>
-            <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto">
-              <div className="p-3 text-xs hover:bg-slate-50 transition-colors">
-                <p className="font-medium text-slate-800">Invoice INV-001429 Overdue</p>
-                <p className="text-slate-500 text-[11px] mt-0.5">
-                  Payment of ₹53,100.00 from Bharat Fintech is 14 days overdue.
-                </p>
-                <span className="text-[10px] text-slate-400 mt-1 block">1 hour ago</span>
-              </div>
-              <div className="p-3 text-xs hover:bg-slate-50 transition-colors">
-                <p className="font-medium text-slate-800">Subscription SUB-000814 Paused</p>
-                <p className="text-slate-500 text-[11px] mt-0.5">
-                  Growth Monthly tier paused by billing operations team.
-                </p>
-                <span className="text-[10px] text-slate-400 mt-1 block">3 hours ago</span>
-              </div>
-            </div>
-            <div className="p-2 border-t border-slate-100 bg-slate-50 text-center">
-              <button
-                onClick={() => navigate('/app/audit')}
-                className="text-[11px] font-medium text-slate-600 hover:text-slate-900"
-              >
-                View Audit Trail →
-              </button>
-            </div>
-          </Dropdown>
+            <Bell className="h-4 w-4" />
+          </button>
 
           {/* User Profile Menu */}
           <Dropdown
@@ -193,32 +153,6 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
                     label: user ? user.email : '',
                     icon: <UserIcon className="h-3.5 w-3.5" />,
                     disabled: true,
-                  },
-                ],
-              },
-              {
-                title: 'Switch Demo Persona (RBAC)',
-                items: [
-                  {
-                    id: 'role-admin',
-                    label: 'Organization Admin (Full)',
-                    checked: roleName === 'Organization Admin',
-                    icon: <Shield className="h-3.5 w-3.5" />,
-                    onClick: () => setUserRole('Organization Admin'),
-                  },
-                  {
-                    id: 'role-billing',
-                    label: 'Billing Manager',
-                    checked: roleName === 'Billing Manager',
-                    icon: <Shield className="h-3.5 w-3.5" />,
-                    onClick: () => setUserRole('Billing Manager'),
-                  },
-                  {
-                    id: 'role-readonly',
-                    label: 'Read-only User',
-                    checked: roleName === 'Read-only User',
-                    icon: <Shield className="h-3.5 w-3.5" />,
-                    onClick: () => setUserRole('Read-only User'),
                   },
                 ],
               },

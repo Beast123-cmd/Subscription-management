@@ -15,12 +15,14 @@ import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Invoice } from '@/types';
+import { Input } from '@/components/ui/input';
 
 export function InvoicesListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [formOpen, setFormOpen] = useState(false); const [customerId, setCustomerId] = useState(''); const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10)); const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -123,7 +125,7 @@ export function InvoicesListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Invoice draft creation will be enabled in Phase 11.', 'Create Invoice')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               Create Draft Invoice
@@ -132,6 +134,7 @@ export function InvoicesListPage() {
         }
       />
 
+      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createInvoice({ customerId, currencyCode: activeOrg?.defaultCurrencyCode ?? 'INR', issueDate, dueDate }); toast.success('Invoice draft created.', 'Success'); setFormOpen(false); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create invoice.', 'Invoice failed'); } }}><div className="mb-4 text-sm font-semibold">Create draft invoice</div><div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Customer ID" value={customerId} onChange={(e) => setCustomerId(e.target.value)} /><Input required type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} /><Input required type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Create invoice</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}

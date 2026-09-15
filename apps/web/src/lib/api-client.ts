@@ -8,7 +8,6 @@ import type {
   Invoice,
   Payment,
   Refund,
-  AuditLog,
   Organization,
   OrganizationMember,
   Role,
@@ -130,6 +129,10 @@ class ApiClient {
     return this.request<PaginatedResponse<Customer>>('/customers');
   }
 
+  async createCustomer(input: { customerType: 'BUSINESS' | 'INDIVIDUAL'; legalName: string; displayName: string; email?: string; defaultCurrencyCode: string }): Promise<Customer> {
+    return this.request<Customer>('/customers', { method: 'POST', body: JSON.stringify(input) });
+  }
+
   async getCustomer(id: string): Promise<Customer> {
     return this.request<Customer>(`/customers/${id}`);
   }
@@ -141,6 +144,7 @@ class ApiClient {
   async getProducts(): Promise<PaginatedResponse<Product>> {
     return this.request<PaginatedResponse<Product>>('/products');
   }
+  async createProduct(input: { productCode: string; name: string; productType: 'GOODS' | 'SERVICE'; costPrice: string; costCurrencyCode: string }): Promise<Product> { return this.request<Product>('/products', { method: 'POST', body: JSON.stringify(input) }); }
 
   async getProduct(id: string): Promise<Product> {
     return this.request<Product>(`/products/${id}`);
@@ -149,6 +153,7 @@ class ApiClient {
   async getPlans(): Promise<PaginatedResponse<Plan>> {
     return this.request<PaginatedResponse<Plan>>('/plans');
   }
+  async createPlan(input: { planCode: string; name: string }): Promise<Plan> { return this.request<Plan>('/plans', { method: 'POST', body: JSON.stringify(input) }); }
 
   async getPlan(id: string): Promise<Plan> {
     return this.request<Plan>(`/plans/${id}`);
@@ -161,6 +166,7 @@ class ApiClient {
   async getSubscriptions(): Promise<PaginatedResponse<Subscription>> {
     return this.request<PaginatedResponse<Subscription>>('/subscriptions');
   }
+  async createSubscription(input: { customerId: string; planId: string; currencyCode: string; billingPeriod: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL'; startDate: string; billingStartDate: string }): Promise<Subscription> { return this.request<Subscription>('/subscriptions', { method: 'POST', body: JSON.stringify(input) }); }
 
   async getSubscription(id: string): Promise<Subscription> {
     return this.request<Subscription>(`/subscriptions/${id}`);
@@ -169,6 +175,7 @@ class ApiClient {
   async getQuotations(): Promise<PaginatedResponse<Quotation>> {
     return this.request<PaginatedResponse<Quotation>>('/quotations');
   }
+  async createQuotation(input: { customerId: string; currencyCode: string; validUntil: string; items: Array<{ description: string; quantity: number; unitPrice: string }> }): Promise<Quotation> { return this.request<Quotation>('/quotations', { method: 'POST', body: JSON.stringify(input) }); }
 
   async getQuotation(id: string): Promise<Quotation> {
     return this.request<Quotation>(`/quotations/${id}`);
@@ -181,6 +188,7 @@ class ApiClient {
   async getInvoices(): Promise<PaginatedResponse<Invoice>> {
     return this.request<PaginatedResponse<Invoice>>('/invoices');
   }
+  async createInvoice(input: { customerId: string; currencyCode: string; issueDate: string; dueDate: string }): Promise<Invoice> { return this.request<Invoice>('/invoices', { method: 'POST', body: JSON.stringify(input) }); }
 
   async getInvoiceSummary(): Promise<{
     year: number;
@@ -208,14 +216,8 @@ class ApiClient {
   async getRefunds(): Promise<PaginatedResponse<Refund>> {
     return this.request<PaginatedResponse<Refund>>('/payments/refunds');
   }
+  async createRefund(input: { paymentId: string; amount: string; reason: string }): Promise<Refund> { return this.request<Refund>('/payments/refunds', { method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify(input) }); }
 
-  // ==========================================
-  // Audit Logs
-  // ==========================================
-
-  async getAuditLogs(): Promise<PaginatedResponse<AuditLog>> {
-    throw new ApiError('Audit logs are not implemented yet.', 'NOT_IMPLEMENTED', 501);
-  }
 }
 
 export const apiClient = new ApiClient();

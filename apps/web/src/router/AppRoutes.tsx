@@ -30,7 +30,6 @@ import { RefundsListPage } from '@/pages/refunds/RefundsListPage';
 import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
-import { AuditLogPage } from '@/pages/admin/AuditLogPage';
 import { OrganizationSettingsPage } from '@/pages/admin/OrganizationSettingsPage';
 
 // Error Pages
@@ -272,14 +271,6 @@ export function AppRoutes() {
           element={
             <PermissionRoute permission={PERMISSIONS.ORGANIZATION_READ}>
               <OrganizationSettingsPage />
-            </PermissionRoute>
-          }
-        />
-        <Route
-          path="audit"
-          element={
-            <PermissionRoute permission={PERMISSIONS.AUDIT_READ}>
-              <AuditLogPage />
             </PermissionRoute>
           }
         />

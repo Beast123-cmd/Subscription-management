@@ -14,12 +14,17 @@ import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Customer } from '@/types';
+import { Input } from '@/components/ui/input';
 
 export function CustomersListPage() {
   const { activeOrg } = useOrganization();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [legalName, setLegalName] = useState('');
+  const [email, setEmail] = useState('');
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -117,7 +122,7 @@ export function CustomersListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Customer creation modal will open in Phase 6.', 'Create Customer')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               Add Customer
@@ -125,6 +130,8 @@ export function CustomersListPage() {
           </Can>
         }
       />
+
+      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); try { await apiClient.createCustomer({ customerType: 'BUSINESS', legalName, displayName: legalName, email: email || undefined, defaultCurrencyCode: activeOrg?.defaultCurrencyCode ?? 'INR' }); toast.success('Customer created.', 'Success'); setFormOpen(false); setLegalName(''); setEmail(''); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to create customer.', 'Customer failed'); } finally { setSaving(false); } }}><div className="mb-4 text-sm font-semibold text-slate-900">Add customer</div><div className="grid gap-3 md:grid-cols-2"><Input required placeholder="Legal / display name" value={legalName} onChange={(e) => setLegalName(e.target.value)} /><Input type="email" placeholder="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Create customer'}</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
 
       <FilterBar
         searchValue={search}
@@ -183,7 +190,7 @@ export function CustomersListPage() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => toast.info('Customer creation modal ready for Phase 6.', 'Create Customer')}
+              onClick={() => setFormOpen(true)}
               leftIcon={<Plus className="h-3.5 w-3.5" />}
             >
               Create Customer

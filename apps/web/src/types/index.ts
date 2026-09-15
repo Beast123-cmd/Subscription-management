@@ -389,22 +389,6 @@ export interface Refund {
 }
 
 // ==========================================
-// Audit Logs
-// ==========================================
-
-export interface AuditLog {
-  id: string;
-  organizationId: string;
-  actorUserId?: string | null;
-  actorName: string;
-  action: string;
-  resource: string;
-  resourceId: string;
-  details?: string;
-  timestamp: string;
-}
-
-// ==========================================
 // API & Pagination Primitives
 // ==========================================
 
