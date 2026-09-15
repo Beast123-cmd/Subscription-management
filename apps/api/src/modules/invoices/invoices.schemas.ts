@@ -16,4 +16,6 @@ export const lineSchema = z.object({
   unitPrice: money,
   discountAmount: money.optional(),
   taxAmount: money.optional(),
+  discountId: z.uuid().optional(),
+  taxId: z.uuid().optional(),
 });

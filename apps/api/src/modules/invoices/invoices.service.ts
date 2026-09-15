@@ -78,12 +78,16 @@ export class InvoicesService {
       if (!x) throw new NotFoundException('Invoice not found.');
       if (x.status !== 'DRAFT') throw new ConflictException('Only draft invoices can change.');
       const sub = new Prisma.Decimal(i.unitPrice).mul(i.quantity);
-      const d = new Prisma.Decimal(i.discountAmount ?? '0');
-      const t = new Prisma.Decimal(i.taxAmount ?? '0');
+      const discount = i.discountId ? await tx.discount.findFirst({ where: { id: i.discountId, organizationId: o, status: 'ACTIVE' } }) : null;
+      const tax = i.taxId ? await tx.tax.findFirst({ where: { id: i.taxId, organizationId: o, status: 'ACTIVE' } }) : null;
+      if (i.discountId && !discount) throw new NotFoundException('Active discount not found.');
+      if (i.taxId && !tax) throw new NotFoundException('Active tax not found.');
+      const d = discount ? sub.mul(discount.rate).div(100) : new Prisma.Decimal(i.discountAmount ?? '0');
+      const t = tax ? sub.minus(d).mul(tax.rate).div(100) : new Prisma.Decimal(i.taxAmount ?? '0');
       return tx.invoiceItem.create({
         data: {
           invoiceId: id,
-          ...i,
+          description: i.description, quantity: i.quantity, unitPrice: i.unitPrice,
           discountAmount: d,
           taxAmount: t,
           lineSubtotal: sub,

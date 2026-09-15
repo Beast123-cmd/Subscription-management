@@ -11,6 +11,7 @@ import { InvoicesModule } from './modules/invoices/invoices.module.js';
 import { HealthController } from './health.controller.js';
 import { OrganizationsModule } from './modules/organizations/organizations.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
+import { RulesModule } from './modules/rules/rules.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PaymentsModule } from './modules/payments/payments.module.js';
     AuthModule,
     OrganizationsModule,
     PaymentsModule,
+    RulesModule,
     CustomersModule,
     CatalogModule,
     PlansModule,

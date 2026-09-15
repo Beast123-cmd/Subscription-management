@@ -84,6 +84,11 @@ enum RefundStatus {
   VOIDED
 }
 
+enum RuleStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 enum QuotationStatus {
   DRAFT
   ISSUED
@@ -168,6 +173,8 @@ model Organization {
   invoices            Invoice[]
   payments            Payment[]
   refunds             Refund[]
+  taxes               Tax[]
+  discounts           Discount[]
 
   @@map("organizations")
 }
@@ -660,4 +667,32 @@ model InvoiceItem {
  invoice Invoice @relation(fields:[invoiceId],references:[id],onDelete:Restrict)
  @@index([invoiceId])
  @@map("invoice_items")
+}
+
+model Tax {
+ id String @id @default(uuid()) @db.Uuid
+ organizationId String @map("organization_id") @db.Uuid
+ name String @db.VarChar(160)
+ rate Decimal @db.Decimal(9,4)
+ status RuleStatus @default(ACTIVE)
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+ organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
+ @@unique([organizationId,name])
+ @@index([organizationId,status])
+ @@map("taxes")
+}
+
+model Discount {
+ id String @id @default(uuid()) @db.Uuid
+ organizationId String @map("organization_id") @db.Uuid
+ name String @db.VarChar(160)
+ rate Decimal @db.Decimal(9,4)
+ status RuleStatus @default(ACTIVE)
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+ organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
+ @@unique([organizationId,name])
+ @@index([organizationId,status])
+ @@map("discounts")
 }
