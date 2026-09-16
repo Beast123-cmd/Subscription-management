@@ -51,7 +51,9 @@ export function DashboardPage() {
   const quotations = quotationsData?.data || [];
 
   const activeSubsCount = subscriptions.filter((s) => s.status === 'ACTIVE').length;
-  const overdueInvoices = invoices.filter((i) => i.status === 'OVERDUE');
+  const overdueInvoices = invoices.filter(
+    (invoice) => invoice.status === 'FINALIZED' && Number(invoice.amountDue) > 0 && new Date(invoice.dueDate) < new Date(new Date().toDateString()),
+  );
   const pendingQuotationsCount = quotations.filter((q) => q.status === 'ISSUED').length;
 
   return (
@@ -149,17 +151,7 @@ export function DashboardPage() {
             {isInvoicesLoading ? (
               <Skeleton className="h-7 w-16" />
             ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-rose-600 tabular-nums">
-                  {overdueInvoices.length}
-                </span>
-                <span className="text-xs font-medium text-slate-500">
-                  <CurrencyDisplay
-                    amount={overdueInvoices[0]?.amountDue || '0'}
-                    currencyCode={activeOrg?.defaultCurrencyCode}
-                  />
-                </span>
-              </div>
+              <span className="text-2xl font-bold tracking-tight text-rose-600 tabular-nums">{overdueInvoices.length}</span>
             )}
             <span className="text-sm text-slate-400 block mt-0.5">
               Requiring collections follow-up
