@@ -98,6 +98,10 @@ class ApiClient {
     });
   }
 
+  activateInvitation(input: { token: string; password: string }): Promise<AuthSession> {
+    return this.request<AuthSession>('/auth/activate', { method: 'POST', body: JSON.stringify(input) });
+  }
+
   async getCurrentUser(): Promise<AuthSession['user']> {
     return this.request<AuthSession['user']>('/auth/me');
   }
@@ -122,6 +126,7 @@ class ApiClient {
   async getOrganizationRoles(): Promise<{ data: Role[] }> {
     return this.request<{ data: Role[] }>('/organizations/roles');
   }
+  createOrganizationInvitation(input: { email: string; firstName: string; lastName: string; roleId: string }): Promise<{ activationToken: string; expiresAt: string }> { return this.request('/organizations/invitations', { method: 'POST', body: JSON.stringify(input) }); }
   assignMemberRoles(membershipId: string, roleIds: string[]): Promise<unknown> { return this.command(`/organizations/members/${membershipId}/roles`, { roleIds }); }
 
   // ==========================================

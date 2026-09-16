@@ -8,6 +8,7 @@ import { AppShell } from '@/components/layout/AppShell';
 
 // Auth Pages
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { ActivateInvitationPage } from '@/pages/auth/ActivateInvitationPage';
 import { SelectOrganizationPage } from '@/pages/auth/SelectOrganizationPage';
 
 // Domain Pages
@@ -88,6 +89,7 @@ export function AppRoutes() {
     <Routes>
       {/* Public / Auth Routes */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/activate" element={<ActivateInvitationPage />} />
       <Route
         path="/select-organization"
         element={

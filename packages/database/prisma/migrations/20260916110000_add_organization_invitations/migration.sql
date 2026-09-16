@@ -1,0 +1,5 @@
+CREATE TABLE "organization_invitations" ("id" UUID NOT NULL DEFAULT gen_random_uuid(), "organization_id" UUID NOT NULL, "role_id" UUID NOT NULL, "email" VARCHAR(320) NOT NULL, "first_name" VARCHAR(100) NOT NULL, "last_name" VARCHAR(100) NOT NULL, "token_hash" VARCHAR(64) NOT NULL, "expires_at" TIMESTAMPTZ(6) NOT NULL, "accepted_at" TIMESTAMPTZ(6), "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "organization_invitations_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "organization_invitations_token_hash_key" ON "organization_invitations"("token_hash");
+CREATE INDEX "organization_invitations_organization_id_email_idx" ON "organization_invitations"("organization_id", "email");
+ALTER TABLE "organization_invitations" ADD CONSTRAINT "organization_invitations_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "organization_invitations" ADD CONSTRAINT "organization_invitations_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

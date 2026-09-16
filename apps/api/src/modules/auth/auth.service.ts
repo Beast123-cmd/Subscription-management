@@ -1,6 +1,7 @@
 import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { compare } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
+import { createHash, randomBytes } from 'node:crypto';
 
 import { PrismaService } from '../database/prisma.service.js';
 
@@ -137,6 +138,58 @@ export class AuthService {
       await tx.membershipRole.createMany({ data: roles.map((role) => ({ organizationId, membershipId, roleId: role.id })) });
       return { membershipId, roleIds: roles.map((role) => role.id) };
     });
+  }
+
+  async invite(organizationId: string, input: { email: string; firstName: string; lastName: string; roleId: string }) {
+    const email = input.email.trim().toLowerCase();
+    const role = await this.prisma.role.findFirst({ where: { id: input.roleId, organizationId }, select: { id: true } });
+    if (!role) throw new NotFoundException('Role not found.');
+
+    const member = await this.prisma.organizationMembership.findFirst({ where: { organizationId, user: { email } }, select: { id: true } });
+    if (member) throw new ConflictException('This email already belongs to the organization.');
+    if (await this.prisma.user.findUnique({ where: { email }, select: { id: true } }))
+      throw new ConflictException('This email already has an account. Add its existing membership from the account administration workflow.');
+
+    const activationToken = randomBytes(32).toString('base64url');
+    const tokenHash = this.hashToken(activationToken);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await this.prisma.$transaction([
+      this.prisma.organizationInvitation.deleteMany({ where: { organizationId, email, acceptedAt: null } }),
+      this.prisma.organizationInvitation.create({ data: { organizationId, roleId: role.id, email, firstName: input.firstName.trim(), lastName: input.lastName.trim(), tokenHash, expiresAt } }),
+    ]);
+    return { activationToken, expiresAt };
+  }
+
+  async acceptInvitation(input: { token: string; password: string }) {
+    const tokenHash = this.hashToken(input.token);
+    const invitation = await this.prisma.organizationInvitation.findUnique({ where: { tokenHash } });
+    if (!invitation || invitation.acceptedAt || invitation.expiresAt <= new Date())
+      throw new UnauthorizedException('This activation link is invalid or has expired.');
+
+    const passwordHash = await hash(input.password, 12);
+    const user = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.organizationInvitation.findUnique({ where: { id: invitation.id } });
+      if (!current || current.acceptedAt || current.expiresAt <= new Date())
+        throw new UnauthorizedException('This activation link is invalid or has expired.');
+      if (await tx.user.findUnique({ where: { email: current.email }, select: { id: true } }))
+        throw new ConflictException('An account already exists for this email.');
+      const created = await tx.user.create({ data: { email: current.email, passwordHash, firstName: current.firstName, lastName: current.lastName, status: 'ACTIVE' } });
+      const membership = await tx.organizationMembership.create({ data: { organizationId: current.organizationId, userId: created.id, status: 'ACTIVE' } });
+      await tx.membershipRole.create({ data: { organizationId: current.organizationId, membershipId: membership.id, roleId: current.roleId } });
+      await tx.organizationInvitation.update({ where: { id: current.id }, data: { acceptedAt: new Date() } });
+      return created;
+    });
+
+    return {
+      accessToken: await this.sign(user.id, invitation.organizationId),
+      user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName },
+      organizations: [],
+      activeOrganizationId: invitation.organizationId,
+    };
+  }
+
+  private hashToken(token: string) {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   private sign(userId: string, activeOrganizationId?: string) {
