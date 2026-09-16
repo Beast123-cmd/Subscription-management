@@ -2,8 +2,9 @@ import { ConflictException, Injectable, NotFoundException, Inject } from '@nestj
 import { Prisma } from '@subscription-management/database';
 import type { z } from 'zod';
 import { PrismaService } from '../database/prisma.service.js';
-import type { createQuotationSchema } from './quotations.schemas.js';
+import type { createQuotationSchema, convertQuotationSchema } from './quotations.schemas.js';
 type Create = z.infer<typeof createQuotationSchema>;
+type Convert = z.infer<typeof convertQuotationSchema>;
 @Injectable()
 export class QuotationsService {
   constructor(@Inject(PrismaService) private readonly p: PrismaService) {}
@@ -59,6 +60,24 @@ export class QuotationsService {
     return this.p.quotation.update({
       where: { id },
       data: { status: to, ...(to === 'ISSUED' ? { issueDate: new Date() } : {}) },
+    });
+  }
+  async convert(org: string, id: string, userId: string, input: Convert) {
+    if (input.billingStartDate < input.startDate) throw new ConflictException('Billing start date cannot precede subscription start date.');
+    return this.p.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM quotations WHERE id = ${id}::uuid AND organization_id = ${org}::uuid FOR UPDATE`;
+      const quote = await tx.quotation.findFirst({ where: { id, organizationId: org }, include: { items: true } });
+      if (!quote) throw new NotFoundException('Quotation not found.');
+      if (quote.status !== 'ACCEPTED') throw new ConflictException('Only accepted quotations can create a subscription.');
+      if (await tx.subscription.findUnique({ where: { sourceQuotationId: id } })) throw new ConflictException('This quotation has already been converted.');
+      const plan = await tx.plan.findFirst({ where: { id: input.planId, organizationId: org, status: 'ACTIVE' } });
+      const customer = await tx.customer.findFirst({ where: { id: quote.customerId, organizationId: org, status: 'ACTIVE' } });
+      if (!plan || !customer) throw new NotFoundException('Active customer or plan not found.');
+      const [n] = await tx.$queryRaw<{ next_value: bigint }[]>`INSERT INTO organization_sequences(organization_id,sequence_type,next_value,updated_at) VALUES(${org}::uuid,'SUBSCRIPTION'::"OrganizationSequenceType",1,now()) ON CONFLICT(organization_id,sequence_type) DO UPDATE SET next_value=organization_sequences.next_value+1,updated_at=now() RETURNING next_value`;
+      const subscription = await tx.subscription.create({ data: { organizationId: org, subscriptionNumber: `SUB-${String(n?.next_value ?? 1n).padStart(6, '0')}`, customerId: quote.customerId, planId: input.planId, sourceQuotationId: quote.id, startDate: new Date(input.startDate), billingStartDate: new Date(input.billingStartDate), currencyCode: quote.currencyCode, autoRenew: input.autoRenew ?? true } });
+      await tx.subscriptionItem.createMany({ data: quote.items.map((item) => ({ subscriptionId: subscription.id, descriptionSnapshot: item.description, quantity: item.quantity, unitPrice: item.unitPrice, currencyCode: quote.currencyCode })) });
+      await tx.subscriptionEvent.create({ data: { organizationId: org, subscriptionId: subscription.id, eventType: 'CREATED_FROM_QUOTATION', actorUserId: userId, metadata: { quotationId: quote.id, quotationNumber: quote.quotationNumber } } });
+      return subscription;
     });
   }
 }

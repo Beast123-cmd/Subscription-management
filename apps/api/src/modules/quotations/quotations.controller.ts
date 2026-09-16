@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { PermissionGuard } from '../auth/permission.guard.js';
 import { RequirePermissions } from '../auth/require-permissions.decorator.js';
 import { TenantGuard } from '../auth/tenant.guard.js';
-import { createQuotationSchema } from './quotations.schemas.js';
+import { createQuotationSchema, convertQuotationSchema } from './quotations.schemas.js';
 import { QuotationsService } from './quotations.service.js';
 import { Inject } from '@nestjs/common';
 function parse<T>(s: z.ZodType<T>, v: unknown): T {
@@ -46,6 +46,11 @@ export class QuotationsController {
   ) {
     return this.q.change(u.activeOrganizationId, id, 'ACCEPTED');
   }
+  @Post(':id/convert') @RequirePermissions('subscription.create') convert(
+    @CurrentUser() u: { userId: string; activeOrganizationId: string },
+    @Param('id') id: string,
+    @Body() b: unknown,
+  ) { return this.q.convert(u.activeOrganizationId, id, u.userId, parse(convertQuotationSchema, b)); }
   @Post(':id/reject') @RequirePermissions('quotation.update') r(
     @CurrentUser() u: { activeOrganizationId: string },
     @Param('id') id: string,

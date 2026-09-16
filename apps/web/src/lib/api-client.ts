@@ -194,6 +194,7 @@ class ApiClient {
   async getQuotation(id: string): Promise<Quotation> {
     return this.request<Quotation>(`/quotations/${id}`);
   }
+  convertQuotation(id: string, input: { planId: string; startDate: string; billingStartDate: string; autoRenew?: boolean }): Promise<{ id: string; subscriptionNumber: string }> { return this.request(`/quotations/${id}/convert`, { method: 'POST', body: JSON.stringify(input) }); }
 
   // ==========================================
   // Invoices, Payments & Refunds

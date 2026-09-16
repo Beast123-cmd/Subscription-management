@@ -11,11 +11,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/error-state';
 import { apiClient } from '@/lib/api-client';
 import { useCommand } from '@/lib/use-command';
+import { PlanSelect } from '@/components/data/PlanSelect';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/contexts/ToastContext';
 
 export function QuotationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { run, pending } = useCommand();
+  const toast = useToast();
+  const [convertOpen, setConvertOpen] = React.useState(false);
+  const [planId, setPlanId] = React.useState('');
+  const [startDate, setStartDate] = React.useState(new Date().toISOString().slice(0, 10));
+  const [converting, setConverting] = React.useState(false);
+  async function convert() { if (!id || converting) return; setConverting(true); try { const subscription = await apiClient.convertQuotation(id, { planId, startDate, billingStartDate: startDate }); toast.success(`${subscription.subscriptionNumber} created from this quotation.`, 'Subscription created'); navigate(`/app/subscriptions/${subscription.id}`); } catch (error) { toast.error(error instanceof Error ? error.message : 'Unable to create subscription.', 'Conversion failed'); } finally { setConverting(false); } }
 
   const { data: quotation, isLoading, isError, refetch } = useQuery({
     queryKey: ['quotation', id],
@@ -79,10 +88,13 @@ export function QuotationDetailPage() {
                 Accept & Convert
               </Button>
             )}
+            {quotation.status === 'ACCEPTED' && <Button variant="primary" size="sm" onClick={() => setConvertOpen((value) => !value)} leftIcon={<CheckCircle className="h-3.5 w-3.5" />}>Create subscription</Button>}
             {['DRAFT', 'ISSUED'].includes(quotation.status) && <Button variant="destructive" size="sm" isLoading={pending} onClick={() => void run(`/quotations/${quotation.id}/cancel`, `Quotation ${quotation.quotationNumber} cancelled.`, 'Cancel this quotation?')} leftIcon={<XCircle className="h-3.5 w-3.5" />}>Cancel</Button>}
           </div>
         }
       />
+
+      {quotation.status === 'ACCEPTED' && convertOpen && <section className="mb-6 rounded-xl border border-indigo-200 bg-white p-5 shadow-2xs"><h2 className="font-semibold text-slate-900">Create subscription from accepted quotation</h2><p className="mt-1 text-sm text-slate-600">The negotiated quotation lines will be snapshotted into a new draft subscription.</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><PlanSelect value={planId} onChange={setPlanId} /><Input label="Subscription start date" type="date" required value={startDate} onChange={(event) => setStartDate(event.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="button" isLoading={converting} disabled={!planId} onClick={() => void convert()}>Create draft subscription</Button><Button type="button" variant="secondary" disabled={converting} onClick={() => setConvertOpen(false)}>Cancel</Button></div></section>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs">

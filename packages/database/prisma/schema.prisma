@@ -480,6 +480,7 @@ model Subscription {
   subscriptionNumber String @map("subscription_number") @db.VarChar(64)
   customerId String @map("customer_id") @db.Uuid
   planId String @map("plan_id") @db.Uuid
+  sourceQuotationId String? @unique @map("source_quotation_id") @db.Uuid
   status SubscriptionStatus @default(DRAFT)
   startDate DateTime @map("start_date") @db.Date
   expirationDate DateTime? @map("expiration_date") @db.Date
@@ -493,6 +494,7 @@ model Subscription {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   customer Customer @relation(fields:[organizationId,customerId],references:[organizationId,id],onDelete:Restrict)
   plan Plan @relation(fields:[organizationId,planId],references:[organizationId,id],onDelete:Restrict)
+  sourceQuotation Quotation? @relation("QuotationConversion", fields:[sourceQuotationId],references:[id],onDelete:Restrict)
   organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
   items SubscriptionItem[]
   events SubscriptionEvent[]
@@ -560,7 +562,8 @@ model Quotation {
  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
  customer Customer @relation(fields:[organizationId,customerId],references:[organizationId,id],onDelete:Restrict)
- items QuotationItem[]
+  items QuotationItem[]
+  convertedSubscription Subscription? @relation("QuotationConversion")
  @@unique([organizationId,quotationNumber])
  @@index([organizationId,status,createdAt])
  @@map("quotations")

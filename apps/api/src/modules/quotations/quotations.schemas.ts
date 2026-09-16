@@ -18,3 +18,9 @@ export const createQuotationSchema = z.object({
     )
     .min(1),
 });
+export const convertQuotationSchema = z.object({
+  planId: z.uuid(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  billingStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  autoRenew: z.boolean().optional(),
+});
