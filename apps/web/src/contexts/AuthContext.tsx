@@ -7,11 +7,8 @@ interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  roleName: string;
-  permissions: string[];
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setUserRole: (role: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -21,8 +18,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.getItem('revops_auth_token'),
   );
   const [user, setUser] = useState<User | null>(null);
-  const [roleName, setRoleName] = useState<string>('Organization Admin');
-  const [permissions, setPermissions] = useState<string[]>(['*']);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Initialize session
@@ -37,8 +32,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const currentUser = await apiClient.getCurrentUser();
         setUser(currentUser);
-        setRoleName('Organization Admin');
-        setPermissions(['*']);
       } catch {
         localStorage.removeItem('revops_auth_token');
         setToken(null);
@@ -60,8 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(session.accessToken);
       setUser(session.user);
 
-      setRoleName('Organization Admin');
-      setPermissions(['*']);
     } finally {
       setIsLoading(false);
     }
@@ -72,12 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('revops_active_org_id');
     setToken(null);
     setUser(null);
-    setRoleName('');
-    setPermissions([]);
-  }, []);
-
-  const setUserRole = useCallback((role: string) => {
-    setRoleName(role);
   }, []);
 
   return (
@@ -87,11 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         isAuthenticated: !!token && !!user,
         isLoading,
-        roleName,
-        permissions,
         login,
         logout,
-        setUserRole,
       }}
     >
       {children}

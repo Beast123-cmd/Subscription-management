@@ -34,6 +34,8 @@ class ApiClient {
   getAccess(): Promise<{ roles: string[]; permissions: string[] }> { return this.request('/organizations/access'); }
   command(path: string, body?: unknown): Promise<unknown> { return this.request(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) }); }
   getRules(kind: 'taxes' | 'discounts'): Promise<{ data: Array<{ id: string; name: string; rate: string; status: string }> }> { return this.request(`/${kind}`); }
+  createRule(kind: 'taxes' | 'discounts', input: { name: string; rate: string }): Promise<unknown> { return this.request(`/${kind}`, { method: 'POST', body: JSON.stringify(input) }); }
+  archiveRule(kind: 'taxes' | 'discounts', id: string): Promise<unknown> { return this.command(`/${kind}/${id}/archive`); }
 
   private getAuthToken(): string | null {
     return localStorage.getItem('revops_auth_token');
@@ -204,6 +206,9 @@ class ApiClient {
   async getInvoice(id: string): Promise<Invoice> {
     return this.request<Invoice>(`/invoices/${id}`);
   }
+
+  finalizeInvoice(id: string): Promise<unknown> { return this.command(`/invoices/${id}/finalize`); }
+  voidInvoice(id: string): Promise<unknown> { return this.command(`/invoices/${id}/void`); }
 
   async addInvoiceLine(id: string, input: { description: string; quantity: number; unitPrice: string }): Promise<unknown> {
     return this.request(`/invoices/${id}/items`, { method: 'POST', body: JSON.stringify(input) });

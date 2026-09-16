@@ -31,6 +31,7 @@ import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
 import { OrganizationSettingsPage } from '@/pages/admin/OrganizationSettingsPage';
+import { RulesPage } from '@/pages/admin/RulesPage';
 
 // Error Pages
 import { NotFoundPage } from '@/pages/errors/NotFoundPage';
@@ -275,6 +276,7 @@ export function AppRoutes() {
             </PermissionRoute>
           }
         />
+        <Route path="rules" element={<PermissionRoute permission="tax.read"><RulesPage /></PermissionRoute>} />
 
         {/* Catch-all 404 within app */}
         <Route path="*" element={<NotFoundPage />} />

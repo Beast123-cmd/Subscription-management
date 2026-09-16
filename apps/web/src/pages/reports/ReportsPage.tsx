@@ -1,106 +1,50 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Download } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { CurrencyDisplay } from '@/components/data/CurrencyDisplay';
 import { Tabs } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
-import { useToast } from '@/contexts/ToastContext';
+
+type Amounts = Record<string, number>;
+const add = (amounts: Amounts, currency: string, amount: string) => ({ ...amounts, [currency]: (amounts[currency] ?? 0) + Number(amount) });
+
+function AmountList({ amounts, empty = 'No activity recorded.' }: { amounts: Amounts; empty?: string }) {
+  const rows = Object.entries(amounts);
+  if (!rows.length) return <p className="mt-2 text-sm text-slate-500">{empty}</p>;
+  return <div className="mt-2 space-y-1">{rows.map(([currency, amount]) => <CurrencyDisplay key={currency} amount={String(amount)} currencyCode={currency} className="text-2xl font-bold text-slate-900" />)}</div>;
+}
+
+function Metric({ label, amounts }: { label: string; amounts: Amounts }) {
+  return <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs"><span className="text-sm font-medium text-slate-600">{label}</span><AmountList amounts={amounts} /></section>;
+}
 
 export function ReportsPage() {
   const { activeOrg } = useOrganization();
   const [activeTab, setActiveTab] = useState('revenue');
-  const toast = useToast();
+  const invoices = useQuery({ queryKey: ['invoice-summary', activeOrg?.id], queryFn: () => apiClient.getInvoiceSummary(), enabled: Boolean(activeOrg) });
+  const payments = useQuery({ queryKey: ['payments', activeOrg?.id], queryFn: () => apiClient.getPayments(), enabled: Boolean(activeOrg) });
+  const refunds = useQuery({ queryKey: ['refunds', activeOrg?.id], queryFn: () => apiClient.getRefunds(), enabled: Boolean(activeOrg) });
+  const loading = invoices.isPending || payments.isPending || refunds.isPending;
+  const failed = invoices.isError || payments.isError || refunds.isError;
+  const collected = (payments.data?.data ?? []).filter((payment) => payment.status === 'SETTLED').reduce((totals, payment) => add(totals, payment.currencyCode, payment.amount), {} as Amounts);
+  const refunded = (refunds.data?.data ?? []).reduce((totals, refund) => add(totals, refund.currencyCode, refund.amount), {} as Amounts);
+  const invoiced = Object.fromEntries((invoices.data?.totals ?? []).map((total) => [total.currencyCode, Number(total.amount)]));
 
-  return (
-    <div>
-      <PageHeader
-        title="Revenue & Operational Reports"
-        description="Filterable financial summaries and subscriber analytics evaluated directly from PostgreSQL ledger data."
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => toast.info('Exporting financial report CSV...', 'Export')}
-            leftIcon={<Download className="h-3.5 w-3.5" />}
-          >
-            Export Report
-          </Button>
-        }
-      />
+  function exportReport() {
+    const lines = ['metric,currency,amount', ...Object.entries(invoiced).map(([currency, amount]) => `invoiced_ytd,${currency},${amount}`), ...Object.entries(collected).map(([currency, amount]) => `collected,${currency},${amount}`), ...Object.entries(refunded).map(([currency, amount]) => `refunded,${currency},${amount}`)];
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+    const link = document.createElement('a'); link.href = url; link.download = `revops-report-${invoices.data?.year ?? new Date().getFullYear()}.csv`; link.click(); URL.revokeObjectURL(url);
+  }
 
-      <Tabs
-        activeTab={activeTab}
-        onChange={setActiveTab}
-        tabs={[
-          { id: 'revenue', label: 'Revenue & Cashflow' },
-          { id: 'subscriptions', label: 'Subscription Retention' },
-          { id: 'aging', label: 'Overdue Aging' },
-        ]}
-        className="mb-6"
-      />
-
-      {activeTab === 'revenue' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
-              <span className="text-xs font-medium text-slate-500 block">Gross Invoiced (YTD)</span>
-              <div className="mt-2">
-                <CurrencyDisplay amount="1179000.0000" currencyCode={activeOrg?.defaultCurrencyCode} className="text-2xl font-bold" />
-              </div>
-              <span className="text-sm text-emerald-600 font-medium block mt-1">+14.2% vs previous period</span>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
-              <span className="text-xs font-medium text-slate-500 block">Net Collected Settlement</span>
-              <div className="mt-2">
-                <CurrencyDisplay amount="1041200.0000" currencyCode={activeOrg?.defaultCurrencyCode} className="text-2xl font-bold text-slate-900" />
-              </div>
-              <span className="text-sm text-slate-400 block mt-1">Settled via wire transfer & card</span>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
-              <span className="text-xs font-medium text-slate-500 block">Refunds & Reversals</span>
-              <div className="mt-2">
-                <CurrencyDisplay amount="10000.0000" currencyCode={activeOrg?.defaultCurrencyCode} className="text-2xl font-bold text-amber-600" />
-              </div>
-              <span className="text-sm text-slate-400 block mt-1">&lt; 1% of settled volume</span>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
-            <h4 className="text-sm font-semibold text-slate-900 mb-3">Monthly Settlement Breakdown</h4>
-            <div className="divide-y divide-slate-100 text-xs">
-              <div className="py-2.5 flex justify-between">
-                <span className="font-medium text-slate-800">August 2026</span>
-                <CurrencyDisplay amount="50000.0000" currencyCode={activeOrg?.defaultCurrencyCode} />
-              </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="font-medium text-slate-800">February 2026</span>
-                <CurrencyDisplay amount="991200.0000" currencyCode={activeOrg?.defaultCurrencyCode} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'subscriptions' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs">
-          <h4 className="text-sm font-semibold text-slate-900 mb-2">Subscription Health & Retention</h4>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Detailed churn tracking, contraction, expansion, and net revenue retention metrics are scheduled for Phase 14 reporting.
-          </p>
-        </div>
-      )}
-
-      {activeTab === 'aging' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs">
-          <h4 className="text-sm font-semibold text-slate-900 mb-2">Accounts Receivable Aging Report</h4>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Categorization by 1-30 days, 31-60 days, and 90+ days overdue buckets.
-          </p>
-        </div>
-      )}
-    </div>
-  );
+  return <div>
+    <PageHeader title="Revenue reports" description="Current financial figures from finalized invoices, settled payments, and completed refunds." actions={<Button variant="outline" size="sm" disabled={loading || failed} onClick={exportReport} leftIcon={<Download className="h-3.5 w-3.5" />}>Export CSV</Button>} />
+    <Tabs activeTab={activeTab} onChange={setActiveTab} tabs={[{ id: 'revenue', label: 'Revenue & cash' }, { id: 'subscriptions', label: 'Subscriptions' }, { id: 'aging', label: 'Receivables' }]} className="mb-6" />
+    {failed && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Some report data could not be loaded. Refresh the page to retry.</div>}
+    {loading && <p className="text-sm text-slate-600">Loading report data…</p>}
+    {!loading && !failed && activeTab === 'revenue' && <div className="space-y-6"><div className="grid gap-4 md:grid-cols-3"><Metric label={`Finalized invoices (${invoices.data?.year ?? new Date().getFullYear()})`} amounts={invoiced} /><Metric label="Settled payments" amounts={collected} /><Metric label="Completed refunds" amounts={refunded} /></div><section className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs"><h2 className="font-semibold text-slate-900">Data definition</h2><p className="mt-1 text-sm leading-6 text-slate-600">Invoices are year-to-date finalized invoice totals. Settled payments and refunds reflect records currently available in this workspace. Amounts are never combined across currencies.</p></section></div>}
+    {!loading && !failed && activeTab !== 'revenue' && <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs"><h2 className="font-semibold text-slate-900">Report unavailable</h2><p className="mt-2 text-sm leading-6 text-slate-600">This report needs additional server-side metrics before it can be shown accurately. It is intentionally not populated with sample values.</p></section>}
+  </div>;
 }

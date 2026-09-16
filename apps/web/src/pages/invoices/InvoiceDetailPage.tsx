@@ -12,13 +12,13 @@ import { ErrorState } from '@/components/ui/error-state';
 import { Can } from '@/components/auth/Can';
 import { PERMISSIONS } from '@/lib/permissions';
 import { apiClient } from '@/lib/api-client';
-import { useToast } from '@/contexts/ToastContext';
 import { InvoiceLineForm } from './InvoiceLineForm';
+import { useCommand } from '@/lib/use-command';
 
 export function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { run, pending } = useCommand();
 
   const { data: invoice, isLoading, isError, refetch } = useQuery({
     queryKey: ['invoice', id],
@@ -72,7 +72,7 @@ export function InvoiceDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.info('Printing invoice representation...', 'Print')}
+              onClick={() => window.print()}
               leftIcon={<Printer className="h-3.5 w-3.5" />}
             >
               Print
@@ -83,7 +83,8 @@ export function InvoiceDetailPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => toast.success(`Invoice ${invoice.invoiceNumber} finalized.`, 'Invoice Finalized')}
+                  isLoading={pending}
+                  onClick={() => void run(`/invoices/${invoice.id}/finalize`, `Invoice ${invoice.invoiceNumber} finalized.`, 'Finalizing makes invoice totals immutable. Continue?')}
                   leftIcon={<CheckCheck className="h-3.5 w-3.5" />}
                 >
                   Finalize Invoice
@@ -92,11 +93,11 @@ export function InvoiceDetailPage() {
             </Can>
 
             <Can permission={PERMISSIONS.PAYMENT_CREATE}>
-              {invoice.status !== 'PAID' && invoice.status !== 'VOID' && (
+              {invoice.status === 'FINALIZED' && parseFloat(invoice.amountDue) > 0 && (
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => toast.info(`Recording payment for ${invoice.invoiceNumber}`, 'Record Payment')}
+                  onClick={() => navigate(`/app/payments?invoiceId=${invoice.id}`)}
                   leftIcon={<DollarSign className="h-3.5 w-3.5" />}
                 >
                   Record Payment
@@ -105,11 +106,12 @@ export function InvoiceDetailPage() {
             </Can>
 
             <Can permission={PERMISSIONS.INVOICE_VOID}>
-              {invoice.status !== 'VOID' && invoice.status !== 'PAID' && (
+              {invoice.status === 'FINALIZED' && parseFloat(invoice.amountPaid) === 0 && (
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => toast.warning(`Invoice ${invoice.invoiceNumber} voided.`, 'Invoice Voided')}
+                  isLoading={pending}
+                  onClick={() => void run(`/invoices/${invoice.id}/void`, `Invoice ${invoice.invoiceNumber} voided.`, 'Void this finalized invoice? This cannot be undone.')}
                   leftIcon={<Ban className="h-3.5 w-3.5" />}
                 >
                   Void

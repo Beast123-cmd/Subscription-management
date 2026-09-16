@@ -17,6 +17,7 @@ import { useToast } from '@/contexts/ToastContext';
 import type { Invoice } from '@/types';
 import { Input } from '@/components/ui/input';
 import { CustomerSelect } from '@/components/data/CustomerSelect';
+import { useCommand } from '@/lib/use-command';
 
 export function InvoicesListPage() {
   const { activeOrg } = useOrganization();
@@ -30,6 +31,7 @@ export function InvoicesListPage() {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const { run } = useCommand();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['invoices', activeOrg?.id, search, statusFilter],
@@ -239,34 +241,28 @@ export function InvoicesListPage() {
                   id: 'finalize',
                   label: 'Finalize invoice',
                   icon: <CheckCheck className="h-3.5 w-3.5" />,
-                  onClick: () =>
-                    toast.success(
-                      `Invoice ${row.invoiceNumber} finalized successfully.`,
-                      'Invoice Finalized',
-                    ),
+                  onClick: () => void run(`/invoices/${row.id}/finalize`, `Invoice ${row.invoiceNumber} finalized.`, 'Finalizing makes invoice totals immutable. Continue?'),
                 },
               ]
             : []),
-          ...(row.status !== 'PAID' && row.status !== 'VOID'
+          ...(row.status === 'FINALIZED' && parseFloat(row.amountDue) > 0
             ? [
                 {
                   id: 'payment',
                   label: 'Record payment',
                   icon: <DollarSign className="h-3.5 w-3.5" />,
-                  onClick: () =>
-                    toast.info(`Record payment for ${row.invoiceNumber}`, 'Record Payment'),
+                  onClick: () => navigate(`/app/payments?invoiceId=${row.id}`),
                 },
               ]
             : []),
-          ...(row.status !== 'VOID'
+          ...(row.status === 'FINALIZED' && parseFloat(row.amountPaid) === 0
             ? [
                 {
                   id: 'void',
                   label: 'Void invoice',
                   icon: <Ban className="h-3.5 w-3.5" />,
                   destructive: true,
-                  onClick: () =>
-                    toast.warning(`Invoice ${row.invoiceNumber} marked as void.`, 'Invoice Voided'),
+                  onClick: () => void run(`/invoices/${row.id}/void`, `Invoice ${row.invoiceNumber} voided.`, 'Void this finalized invoice? This cannot be undone.'),
                 },
               ]
             : []),
