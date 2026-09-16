@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { PlanSelect } from '@/components/data/PlanSelect';
 import { Select } from '@/components/ui/select';
 import { CustomerSelect } from '@/components/data/CustomerSelect';
+import { useCommand } from '@/lib/use-command';
 
 export function SubscriptionsListPage() {
   const { activeOrg } = useOrganization();
@@ -33,6 +34,8 @@ export function SubscriptionsListPage() {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const { run } = useCommand();
+  const reason = (action: string) => window.prompt(`Reason for ${action}:`)?.trim();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['subscriptions', activeOrg?.id, search, statusFilter],
@@ -231,8 +234,7 @@ export function SubscriptionsListPage() {
                   id: 'pause',
                   label: 'Pause subscription',
                   icon: <PauseCircle className="h-3.5 w-3.5" />,
-                  onClick: () =>
-                    toast.warning(`Paused ${row.subscriptionNumber}`, 'Subscription Paused'),
+                  onClick: () => { const value = reason(`pausing ${row.subscriptionNumber}`); if (value) void run(`/subscriptions/${row.id}/pause`, `Subscription ${row.subscriptionNumber} paused.`, undefined, { reason: value }); },
                 },
               ]
             : []),
@@ -242,19 +244,17 @@ export function SubscriptionsListPage() {
                   id: 'resume',
                   label: 'Resume subscription',
                   icon: <PlayCircle className="h-3.5 w-3.5" />,
-                  onClick: () =>
-                    toast.success(`Resumed ${row.subscriptionNumber}`, 'Subscription Resumed'),
+                  onClick: () => { const value = reason(`resuming ${row.subscriptionNumber}`); if (value) void run(`/subscriptions/${row.id}/resume`, `Subscription ${row.subscriptionNumber} resumed.`, undefined, { reason: value }); },
                 },
               ]
             : []),
-          {
+          ...(['DRAFT', 'CONFIRMED', 'ACTIVE', 'PAUSED'].includes(row.status) ? [{
             id: 'cancel',
             label: 'Cancel subscription',
             icon: <XCircle className="h-3.5 w-3.5" />,
             destructive: true,
-            onClick: () =>
-              toast.error(`Cancelled ${row.subscriptionNumber}`, 'Subscription Cancelled'),
-          },
+            onClick: () => { const value = reason(`cancelling ${row.subscriptionNumber}`); if (value) void run(`/subscriptions/${row.id}/cancel`, `Subscription ${row.subscriptionNumber} cancelled.`, `Cancel ${row.subscriptionNumber}?`, { reason: value }); },
+          }] : []),
         ]}
         emptyTitle="No subscriptions yet"
         emptyDescription="Subscriptions will appear here once customers are enrolled in a plan."

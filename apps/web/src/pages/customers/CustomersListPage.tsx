@@ -15,6 +15,7 @@ import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Customer } from '@/types';
 import { Input } from '@/components/ui/input';
+import { useCommand } from '@/lib/use-command';
 
 export function CustomersListPage() {
   const { activeOrg } = useOrganization();
@@ -27,6 +28,7 @@ export function CustomersListPage() {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const { run } = useCommand();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['customers', activeOrg?.id, search, statusFilter],
@@ -173,14 +175,14 @@ export function CustomersListPage() {
             id: 'edit',
             label: 'Edit details',
             icon: <Edit className="h-3.5 w-3.5" />,
-            onClick: () => toast.info(`Editing ${row.customerNumber}`, 'Edit Customer'),
+            onClick: () => navigate(`/app/customers/${row.id}`),
           },
           {
             id: 'archive',
             label: 'Archive customer',
             icon: <Archive className="h-3.5 w-3.5" />,
             destructive: true,
-            onClick: () => toast.warning(`Archived ${row.customerNumber}`, 'Customer Archived'),
+            onClick: () => void run(`/customers/${row.id}/archive`, `${row.customerNumber} archived.`, `Archive ${row.displayName}? Existing financial records stay unchanged.`),
           },
         ]}
         emptyTitle="No customers found"
