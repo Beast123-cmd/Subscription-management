@@ -168,6 +168,10 @@ class ApiClient {
   async getPlan(id: string): Promise<Plan> {
     return this.request<Plan>(`/plans/${id}`);
   }
+  getPlanItems(id: string): Promise<{ data: Plan['items'] extends infer T ? NonNullable<T> : never }> { return this.request(`/plans/${id}/items`); }
+  addPlanItem(id: string, input: { productId: string; quantity: number }): Promise<unknown> { return this.request(`/plans/${id}/items`, { method: 'POST', body: JSON.stringify(input) }); }
+  getPlanPrices(id: string): Promise<{ data: Plan['prices'] extends infer T ? NonNullable<T> : never }> { return this.request(`/plans/${id}/prices`); }
+  addPlanPrice(id: string, input: { currencyCode: string; billingPeriod: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL'; amount: string; effectiveFrom: string }): Promise<unknown> { return this.request(`/plans/${id}/prices`, { method: 'POST', body: JSON.stringify(input) }); }
 
   // ==========================================
   // Subscriptions & Quotations
