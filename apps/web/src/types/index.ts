@@ -173,6 +173,7 @@ export interface PlanItem {
   productName?: string;
   variantId?: string | null;
   quantity: number;
+  product?: { name: string; productCode: string };
 }
 
 export interface Plan {

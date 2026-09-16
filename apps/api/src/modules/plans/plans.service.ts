@@ -40,7 +40,7 @@ export class PlansService {
   async items(org: string, planId: string) {
     await this.find(org, planId);
     return {
-      data: await this.prisma.planItem.findMany({ where: { organizationId: org, planId } }),
+      data: await this.prisma.planItem.findMany({ where: { organizationId: org, planId }, include: { product: { select: { name: true, productCode: true } } } }),
     };
   }
   async addItem(org: string, planId: string, input: Item) {
