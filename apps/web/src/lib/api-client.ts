@@ -210,7 +210,7 @@ class ApiClient {
   finalizeInvoice(id: string): Promise<unknown> { return this.command(`/invoices/${id}/finalize`); }
   voidInvoice(id: string): Promise<unknown> { return this.command(`/invoices/${id}/void`); }
 
-  async addInvoiceLine(id: string, input: { description: string; quantity: number; unitPrice: string }): Promise<unknown> {
+  async addInvoiceLine(id: string, input: { description: string; quantity: number; unitPrice: string; discountId?: string; taxId?: string }): Promise<unknown> {
     return this.request(`/invoices/${id}/items`, { method: 'POST', body: JSON.stringify(input) });
   }
 
