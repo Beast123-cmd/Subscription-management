@@ -122,6 +122,7 @@ class ApiClient {
   async getOrganizationRoles(): Promise<{ data: Role[] }> {
     return this.request<{ data: Role[] }>('/organizations/roles');
   }
+  assignMemberRoles(membershipId: string, roleIds: string[]): Promise<unknown> { return this.command(`/organizations/members/${membershipId}/roles`, { roleIds }); }
 
   // ==========================================
   // Customers

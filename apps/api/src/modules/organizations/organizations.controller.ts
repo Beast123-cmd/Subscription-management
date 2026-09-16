@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { z } from 'zod';
 import { Inject } from '@nestjs/common';
 
 import { AuthService } from '../auth/auth.service.js';
@@ -43,5 +44,14 @@ export class OrganizationsController {
   @RequirePermissions('role.read')
   roles(@CurrentUser() currentUser: { activeOrganizationId: string }) {
     return this.auth.listRoles(currentUser.activeOrganizationId);
+  }
+
+  @Post('members/:id/roles')
+  @UseGuards(TenantGuard, PermissionGuard)
+  @RequirePermissions('user.update')
+  assignRoles(@CurrentUser() currentUser: { activeOrganizationId: string }, @Param('id') membershipId: string, @Body() body: unknown) {
+    const parsed = z.object({ roleIds: z.array(z.uuid()).min(1) }).safeParse(body);
+    if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
+    return this.auth.assignMemberRoles(currentUser.activeOrganizationId, membershipId, parsed.data.roleIds);
   }
 }

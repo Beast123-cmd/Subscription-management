@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
 
@@ -125,6 +125,18 @@ export class AuthService {
     }).then((roles) => ({
       data: roles.map(({ _count, ...role }) => ({ ...role, permissionsCount: _count.permissions })),
     }));
+  }
+
+  async assignMemberRoles(organizationId: string, membershipId: string, roleIds: string[]) {
+    const membership = await this.prisma.organizationMembership.findFirst({ where: { id: membershipId, organizationId, status: 'ACTIVE' } });
+    if (!membership) throw new NotFoundException('Active organization membership not found.');
+    const roles = await this.prisma.role.findMany({ where: { organizationId, id: { in: roleIds } }, select: { id: true } });
+    if (roles.length !== new Set(roleIds).size) throw new ConflictException('One or more roles do not belong to this organization.');
+    return this.prisma.$transaction(async (tx) => {
+      await tx.membershipRole.deleteMany({ where: { organizationId, membershipId } });
+      await tx.membershipRole.createMany({ data: roles.map((role) => ({ organizationId, membershipId, roleId: role.id })) });
+      return { membershipId, roleIds: roles.map((role) => role.id) };
+    });
   }
 
   private sign(userId: string, activeOrganizationId?: string) {
