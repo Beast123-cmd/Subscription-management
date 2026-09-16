@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/data/StatusBadge';
 import { CurrencyDisplay } from '@/components/data/CurrencyDisplay';
@@ -77,14 +77,6 @@ export function PlanDetailPage() {
               leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
             >
               Back
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => toast.info(`Editing plan ${plan.planCode}`, 'Edit Plan')}
-              leftIcon={<Edit className="h-3.5 w-3.5" />}
-            >
-              Edit Plan
             </Button>
           </div>
         }

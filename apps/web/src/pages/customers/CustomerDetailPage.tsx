@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Building, Mail, Phone, MapPin, Edit, ArrowLeft, CreditCard, FileText } from 'lucide-react';
+import { Building, Mail, Phone, MapPin, ArrowLeft, CreditCard, FileText } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/data/StatusBadge';
 import { Tabs } from '@/components/ui/tabs';
@@ -78,14 +78,6 @@ export function CustomerDetailPage() {
               leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
             >
               Back
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => toast.info(`Edit ${customer.customerNumber}`, 'Edit Customer')}
-              leftIcon={<Edit className="h-3.5 w-3.5" />}
-            >
-              Edit Customer
             </Button>
           </div>
         }

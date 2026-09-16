@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Eye, Edit, Archive } from 'lucide-react';
+import { Plus, Eye, Archive } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { FilterBar } from '@/components/data/FilterBar';
 import { DataTable, type ColumnDef } from '@/components/data/DataTable';
@@ -16,6 +16,7 @@ import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Product } from '@/types';
 import { Input } from '@/components/ui/input';
+import { useCommand } from '@/lib/use-command';
 
 export function ProductsListPage() {
   const { activeOrg } = useOrganization();
@@ -24,6 +25,7 @@ export function ProductsListPage() {
   const [formOpen, setFormOpen] = useState(false); const [code, setCode] = useState(''); const [name, setName] = useState(''); const [price, setPrice] = useState('0');
   const navigate = useNavigate();
   const toast = useToast();
+  const { run } = useCommand();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['products', activeOrg?.id, search, statusFilter],
@@ -157,17 +159,11 @@ export function ProductsListPage() {
             onClick: () => navigate(`/app/products/${row.id}`),
           },
           {
-            id: 'edit',
-            label: 'Edit product',
-            icon: <Edit className="h-3.5 w-3.5" />,
-            onClick: () => toast.info(`Editing ${row.productCode}`, 'Edit Product'),
-          },
-          {
             id: 'archive',
             label: 'Archive product',
             icon: <Archive className="h-3.5 w-3.5" />,
             destructive: true,
-            onClick: () => toast.warning(`Archived ${row.productCode}`, 'Product Archived'),
+            onClick: () => void run(`/products/${row.id}/archive`, `${row.productCode} archived.`, `Archive ${row.name}? Existing plan history remains unchanged.`),
           },
         ]}
         emptyTitle="No products configured"

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/data/StatusBadge';
 import { CurrencyDisplay } from '@/components/data/CurrencyDisplay';
@@ -10,13 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/error-state';
 import { apiClient } from '@/lib/api-client';
-import { useToast } from '@/contexts/ToastContext';
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
-  const toast = useToast();
 
   const { data: product, isLoading, isError, refetch } = useQuery({
     queryKey: ['product', id],
@@ -65,14 +63,6 @@ export function ProductDetailPage() {
               leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
             >
               Back
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => toast.info(`Editing ${product.productCode}`, 'Edit Product')}
-              leftIcon={<Edit className="h-3.5 w-3.5" />}
-            >
-              Edit Product
             </Button>
           </div>
         }

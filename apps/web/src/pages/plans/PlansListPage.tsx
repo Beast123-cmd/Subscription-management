@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Eye, Edit } from 'lucide-react';
+import { Plus, Eye } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { FilterBar } from '@/components/data/FilterBar';
 import { DataTable, type ColumnDef } from '@/components/data/DataTable';
@@ -140,12 +140,6 @@ export function PlansListPage() {
             label: 'View details',
             icon: <Eye className="h-3.5 w-3.5" />,
             onClick: () => navigate(`/app/plans/${row.id}`),
-          },
-          {
-            id: 'edit',
-            label: 'Edit plan',
-            icon: <Edit className="h-3.5 w-3.5" />,
-            onClick: () => toast.info(`Editing plan ${row.planCode}`, 'Edit Plan'),
           },
         ]}
         emptyTitle="No plans configured"
