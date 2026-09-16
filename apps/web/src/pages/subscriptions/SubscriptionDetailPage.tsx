@@ -13,13 +13,14 @@ import { ErrorState } from '@/components/ui/error-state';
 import { Can } from '@/components/auth/Can';
 import { PERMISSIONS } from '@/lib/permissions';
 import { apiClient } from '@/lib/api-client';
-import { useToast } from '@/contexts/ToastContext';
+import { useCommand } from '@/lib/use-command';
 
 export function SubscriptionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
-  const toast = useToast();
+  const { run, pending } = useCommand();
+  const reason = (action: string) => window.prompt(`Reason for ${action}:`)?.trim();
 
   const { data: subscription, isLoading, isError, refetch } = useQuery({
     queryKey: ['subscription', id],
@@ -75,7 +76,8 @@ export function SubscriptionDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => toast.warning('Subscription paused.', 'Command Executed')}
+                  isLoading={pending}
+                  onClick={() => { const value = reason('pausing this subscription'); if (value) void run(`/subscriptions/${subscription.id}/pause`, 'Subscription paused.', undefined, { reason: value }); }}
                   leftIcon={<PauseCircle className="h-3.5 w-3.5" />}
                 >
                   Pause
@@ -85,7 +87,8 @@ export function SubscriptionDetailPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => toast.success('Subscription resumed.', 'Command Executed')}
+                  isLoading={pending}
+                  onClick={() => { const value = reason('resuming this subscription'); if (value) void run(`/subscriptions/${subscription.id}/resume`, 'Subscription resumed.', undefined, { reason: value }); }}
                   leftIcon={<PlayCircle className="h-3.5 w-3.5" />}
                 >
                   Resume
@@ -95,17 +98,22 @@ export function SubscriptionDetailPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => toast.success('Subscription confirmed.', 'Command Executed')}
+                  isLoading={pending}
+                  onClick={() => void run(`/subscriptions/${subscription.id}/confirm`, 'Subscription confirmed.')}
                   leftIcon={<CheckCircle className="h-3.5 w-3.5" />}
                 >
                   Confirm Terms
                 </Button>
               )}
-              {subscription.status !== 'CANCELLED' && (
+              {subscription.status === 'CONFIRMED' && (
+                <Button variant="primary" size="sm" isLoading={pending} onClick={() => void run(`/subscriptions/${subscription.id}/activate`, 'Subscription activated.')} leftIcon={<PlayCircle className="h-3.5 w-3.5" />}>Activate</Button>
+              )}
+              {['DRAFT', 'CONFIRMED', 'ACTIVE', 'PAUSED'].includes(subscription.status) && (
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => toast.error('Subscription cancellation requested.', 'Lifecycle Event')}
+                  isLoading={pending}
+                  onClick={() => { const value = reason('cancelling this subscription'); if (value) void run(`/subscriptions/${subscription.id}/cancel`, 'Subscription cancelled.', 'Cancel this subscription?', { reason: value }); }}
                   leftIcon={<XCircle className="h-3.5 w-3.5" />}
                 >
                   Cancel

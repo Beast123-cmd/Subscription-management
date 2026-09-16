@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Send, XCircle } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/data/StatusBadge';
 import { CurrencyDisplay } from '@/components/data/CurrencyDisplay';
@@ -10,12 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/error-state';
 import { apiClient } from '@/lib/api-client';
-import { useToast } from '@/contexts/ToastContext';
+import { useCommand } from '@/lib/use-command';
 
 export function QuotationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { run, pending } = useCommand();
 
   const { data: quotation, isLoading, isError, refetch } = useQuery({
     queryKey: ['quotation', id],
@@ -65,16 +65,21 @@ export function QuotationDetailPage() {
             >
               Back
             </Button>
+            {quotation.status === 'DRAFT' && (
+              <Button variant="primary" size="sm" isLoading={pending} onClick={() => void run(`/quotations/${quotation.id}/issue`, `Quotation ${quotation.quotationNumber} issued.`)} leftIcon={<Send className="h-3.5 w-3.5" />}>Issue quotation</Button>
+            )}
             {quotation.status === 'ISSUED' && (
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => toast.success(`Quotation ${quotation.quotationNumber} accepted. Ready for subscription conversion.`, 'Quote Accepted')}
+                isLoading={pending}
+                onClick={() => void run(`/quotations/${quotation.id}/accept`, `Quotation ${quotation.quotationNumber} accepted.`, 'Accept this quotation?')}
                 leftIcon={<CheckCircle className="h-3.5 w-3.5" />}
               >
                 Accept & Convert
               </Button>
             )}
+            {['DRAFT', 'ISSUED'].includes(quotation.status) && <Button variant="destructive" size="sm" isLoading={pending} onClick={() => void run(`/quotations/${quotation.id}/cancel`, `Quotation ${quotation.quotationNumber} cancelled.`, 'Cancel this quotation?')} leftIcon={<XCircle className="h-3.5 w-3.5" />}>Cancel</Button>}
           </div>
         }
       />

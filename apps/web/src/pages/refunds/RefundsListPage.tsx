@@ -11,17 +11,20 @@ import { apiClient } from '@/lib/api-client';
 import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Refund } from '@/types';
+import { Select } from '@/components/ui/select';
 
 export function RefundsListPage() {
   const { activeOrg } = useOrganization();
   const toast = useToast();
   const [search, setSearch] = useState('');
-  const [formOpen, setFormOpen] = useState(false); const [paymentId, setPaymentId] = useState(''); const [amount, setAmount] = useState(''); const [reason, setReason] = useState('');
+  const [formOpen, setFormOpen] = useState(false); const [paymentId, setPaymentId] = useState(''); const [amount, setAmount] = useState(''); const [reason, setReason] = useState(''); const [saving, setSaving] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['refunds', activeOrg?.id, search],
     queryFn: () => apiClient.getRefunds(),
   });
+  const paymentsQuery = useQuery({ queryKey: ['payments', activeOrg?.id], queryFn: () => apiClient.getPayments(), enabled: formOpen });
+  const eligiblePayments = (paymentsQuery.data?.data ?? []).filter((payment) => payment.status === 'SETTLED');
 
   const rawRefunds = data?.data || [];
   const filteredRefunds = rawRefunds.filter((r) => {
@@ -98,7 +101,7 @@ export function RefundsListPage() {
         description="Immutable financial reversals recorded against prior settlement transactions."
         actions={<Button variant="primary" size="sm" onClick={() => setFormOpen(true)}>Record Refund</Button>}
       />
-      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); try { await apiClient.createRefund({ paymentId, amount, reason }); toast.success('Refund recorded.', 'Success'); setFormOpen(false); setPaymentId(''); setAmount(''); setReason(''); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to record refund.', 'Refund failed'); } }}><div className="mb-4 text-sm font-semibold">Record refund</div><div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Payment ID" value={paymentId} onChange={(e) => setPaymentId(e.target.value)} /><Input required placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} /><Input required placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit">Save refund</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
+      {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); try { await apiClient.createRefund({ paymentId, amount, reason }); toast.success('Refund recorded.', 'Success'); setFormOpen(false); setPaymentId(''); setAmount(''); setReason(''); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to record refund.', 'Refund failed'); } finally { setSaving(false); } }}><div className="mb-4 text-sm font-semibold">Record refund</div><div className="grid gap-3 md:grid-cols-3"><Select required label="Settled payment" value={paymentId} onChange={(e) => setPaymentId(e.target.value)} disabled={paymentsQuery.isPending} options={[{ value: '', label: paymentsQuery.isPending ? 'Loading payments…' : 'Choose a payment' }, ...eligiblePayments.map((payment) => ({ value: payment.id, label: `${payment.paymentNumber} · ${payment.invoiceNumber ?? 'Invoice'} · ${payment.amount}` }))]} /><Input required label="Amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /><Input required label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} /></div><div className="mt-4 flex gap-2"><Button type="submit" isLoading={saving}>Save refund</Button><Button type="button" variant="secondary" disabled={saving} onClick={() => setFormOpen(false)}>Cancel</Button></div></form>}
 
       <FilterBar
         searchValue={search}

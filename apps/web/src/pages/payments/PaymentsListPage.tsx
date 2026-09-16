@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Eye } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -16,13 +16,15 @@ import { useOrganization } from '@/contexts/OrgContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Payment } from '@/types';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 
 export function PaymentsListPage() {
   const { activeOrg } = useOrganization();
+  const [params] = useSearchParams();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [formOpen, setFormOpen] = useState(false);
-  const [invoiceId, setInvoiceId] = useState('');
+  const [formOpen, setFormOpen] = useState(() => Boolean(params.get('invoiceId')));
+  const [invoiceId, setInvoiceId] = useState(() => params.get('invoiceId') ?? '');
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('BANK_TRANSFER');
   const [saving, setSaving] = useState(false);
@@ -33,6 +35,8 @@ export function PaymentsListPage() {
     queryKey: ['payments', activeOrg?.id, search, statusFilter],
     queryFn: () => apiClient.getPayments(),
   });
+  const invoicesQuery = useQuery({ queryKey: ['invoices', activeOrg?.id], queryFn: () => apiClient.getInvoices(), enabled: formOpen });
+  const eligibleInvoices = (invoicesQuery.data?.data ?? []).filter((invoice) => invoice.status === 'FINALIZED' && Number(invoice.amountDue) > 0);
 
   const rawPayments = data?.data || [];
   const filteredPayments = rawPayments.filter((p) => {
@@ -135,7 +139,8 @@ export function PaymentsListPage() {
 
       {formOpen && <form className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" onSubmit={async (e) => { e.preventDefault(); setSaving(true); try { await apiClient.createPayment({ invoiceId, amount, method }); toast.success('Payment recorded.', 'Success'); setFormOpen(false); setInvoiceId(''); setAmount(''); await refetch(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Unable to record payment.', 'Payment failed'); } finally { setSaving(false); } }}>
         <div className="mb-4 text-sm font-semibold text-slate-900">Record payment</div>
-        <div className="grid gap-3 md:grid-cols-3"><Input required placeholder="Finalized invoice ID" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} /><Input required inputMode="decimal" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} /><select className="h-10 rounded-md border border-slate-300 px-3 text-sm" value={method} onChange={(e) => setMethod(e.target.value)}><option value="BANK_TRANSFER">Bank transfer</option><option value="CARD">Card</option><option value="UPI">UPI</option><option value="CASH">Cash</option><option value="OTHER">Other</option></select></div>
+        <div className="grid gap-3 md:grid-cols-3"><Select required label="Finalized invoice" value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} disabled={invoicesQuery.isPending} options={[{ value: '', label: invoicesQuery.isPending ? 'Loading invoices…' : 'Choose an invoice' }, ...eligibleInvoices.map((invoice) => ({ value: invoice.id, label: `${invoice.invoiceNumber} · ${invoice.customerName} · due ${invoice.amountDue}` }))]} /><Input required label="Amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /><Select label="Method" value={method} onChange={(e) => setMethod(e.target.value)} options={[{ value: 'BANK_TRANSFER', label: 'Bank transfer' }, { value: 'CARD', label: 'Card' }, { value: 'UPI', label: 'UPI' }, { value: 'CASH', label: 'Cash' }, { value: 'OTHER', label: 'Other' }]} /></div>
+        {invoicesQuery.isSuccess && !eligibleInvoices.length && <p className="mt-3 text-sm text-slate-600">No finalized invoices have an outstanding balance.</p>}
         <div className="mt-4 flex gap-2"><Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save payment'}</Button><Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button></div>
       </form>}
 

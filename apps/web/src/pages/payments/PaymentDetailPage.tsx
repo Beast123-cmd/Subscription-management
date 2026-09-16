@@ -12,12 +12,10 @@ import { ErrorState } from '@/components/ui/error-state';
 import { Can } from '@/components/auth/Can';
 import { PERMISSIONS } from '@/lib/permissions';
 import { apiClient } from '@/lib/api-client';
-import { useToast } from '@/contexts/ToastContext';
 
 export function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
 
   const { data: payment, isLoading, isError, refetch } = useQuery({
     queryKey: ['payment', id],
@@ -72,7 +70,7 @@ export function PaymentDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => toast.warning('Refund workflow will execute in Phase 12.', 'Issue Refund')}
+                  onClick={() => navigate('/app/refunds')}
                   leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
                 >
                   Issue Refund
