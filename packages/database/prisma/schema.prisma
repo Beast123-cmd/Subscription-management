@@ -646,9 +646,10 @@ model Payment {
  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
  invoice Invoice @relation(fields:[invoiceId],references:[id],onDelete:Restrict)
  refunds Refund[]
- @@unique([organizationId,paymentNumber])
- @@unique([organizationId,idempotencyKey])
- @@index([organizationId,invoiceId,status,receivedAt])
+  @@unique([organizationId,paymentNumber])
+  @@unique([organizationId,idempotencyKey])
+  @@index([organizationId,invoiceId,status,receivedAt])
+  @@index([organizationId,receivedAt])
  @@map("payments")
 }
 
@@ -669,9 +670,11 @@ model Refund {
  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Restrict)
  invoice Invoice @relation(fields:[invoiceId],references:[id],onDelete:Restrict)
  payment Payment @relation(fields:[paymentId],references:[id],onDelete:Restrict)
- @@unique([organizationId,refundNumber])
- @@unique([organizationId,idempotencyKey])
- @@index([organizationId,invoiceId,status,refundedAt])
+  @@unique([organizationId,refundNumber])
+  @@unique([organizationId,idempotencyKey])
+  @@index([organizationId,invoiceId,status,refundedAt])
+  @@index([organizationId,paymentId,status])
+  @@index([organizationId,refundedAt])
  @@map("refunds")
 }
 model InvoiceItem {
