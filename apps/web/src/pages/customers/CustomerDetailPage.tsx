@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building, Mail, Phone, MapPin, Edit, ArrowLeft, CreditCard, FileText } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/data/StatusBadge';
@@ -10,18 +10,31 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/error-state';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/contexts/ToastContext';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 
 export function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
   const toast = useToast();
+  const cache = useQueryClient();
+  const [contactOpen, setContactOpen] = useState(false);
+  const [addressOpen, setAddressOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [firstName, setFirstName] = useState(''); const [lastName, setLastName] = useState(''); const [contactEmail, setContactEmail] = useState(''); const [jobTitle, setJobTitle] = useState('');
+  const [addressLine1, setAddressLine1] = useState(''); const [city, setCity] = useState(''); const [countryCode, setCountryCode] = useState('IN'); const [addressType, setAddressType] = useState<'BILLING' | 'SHIPPING' | 'OTHER'>('BILLING');
 
   const { data: customer, isLoading, isError, refetch } = useQuery({
     queryKey: ['customer', id],
     queryFn: () => apiClient.getCustomer(id || ''),
     enabled: Boolean(id),
   });
+  const contacts = useQuery({ queryKey: ['customer-contacts', id], queryFn: () => apiClient.getCustomerContacts(id || ''), enabled: Boolean(id) });
+  const addresses = useQuery({ queryKey: ['customer-addresses', id], queryFn: () => apiClient.getCustomerAddresses(id || ''), enabled: Boolean(id) });
+
+  async function addContact(event: React.FormEvent) { event.preventDefault(); if (!id || saving) return; setSaving(true); try { await apiClient.createCustomerContact(id, { firstName, lastName, ...(contactEmail ? { email: contactEmail } : {}), ...(jobTitle ? { jobTitle } : {}), isPrimary: !(contacts.data?.data.length) }); setFirstName(''); setLastName(''); setContactEmail(''); setJobTitle(''); setContactOpen(false); await cache.invalidateQueries({ queryKey: ['customer-contacts', id] }); toast.success('Contact added.', 'Saved'); } catch (error) { toast.error(error instanceof Error ? error.message : 'Unable to add contact.', 'Contact failed'); } finally { setSaving(false); } }
+  async function addAddress(event: React.FormEvent) { event.preventDefault(); if (!id || saving) return; setSaving(true); try { await apiClient.createCustomerAddress(id, { addressType, addressLine1, city, countryCode, isDefault: !(addresses.data?.data.some((address) => address.addressType === addressType && address.isDefault)) }); setAddressLine1(''); setCity(''); setAddressOpen(false); await cache.invalidateQueries({ queryKey: ['customer-addresses', id] }); toast.success('Address added.', 'Saved'); } catch (error) { toast.error(error instanceof Error ? error.message : 'Unable to add address.', 'Address failed'); } finally { setSaving(false); } }
 
   if (isLoading) {
     return (
@@ -196,11 +209,9 @@ export function CustomerDetailPage() {
       )}
 
       {activeTab === 'contacts' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs">
-          <h4 className="text-sm font-semibold text-slate-900 mb-4">Contacts & Address Records</h4>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Multi-contact management and typed addresses (Billing/Shipping) per customer are fully supported in Phase 6.
-          </p>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs"><div className="flex items-center justify-between gap-3"><div><h4 className="font-semibold text-slate-900">Contacts</h4><p className="mt-1 text-sm text-slate-600">People responsible for this account.</p></div><Button size="sm" variant="outline" onClick={() => setContactOpen((value) => !value)}>Add contact</Button></div>{contactOpen && <form className="mt-5 grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2" onSubmit={addContact}><Input label="First name" required value={firstName} onChange={(event) => setFirstName(event.target.value)} /><Input label="Last name" required value={lastName} onChange={(event) => setLastName(event.target.value)} /><Input label="Email" type="email" value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} /><Input label="Job title" value={jobTitle} onChange={(event) => setJobTitle(event.target.value)} /><div className="sm:col-span-2 flex gap-2"><Button type="submit" isLoading={saving}>Save contact</Button><Button type="button" variant="secondary" disabled={saving} onClick={() => setContactOpen(false)}>Cancel</Button></div></form>}<div className="mt-5 divide-y divide-slate-100">{contacts.isPending && <p className="py-3 text-sm text-slate-600">Loading contacts…</p>}{contacts.data?.data.map((contact) => <div key={contact.id} className="py-3"><p className="font-medium text-slate-900">{contact.firstName} {contact.lastName}{contact.isPrimary && <span className="ml-2 text-xs font-medium text-indigo-600">Primary</span>}</p><p className="mt-1 text-sm text-slate-600">{[contact.jobTitle, contact.email, contact.phone].filter(Boolean).join(' · ') || 'No contact details'}</p></div>)}{contacts.isSuccess && !contacts.data.data.length && <p className="py-4 text-sm text-slate-600">No contacts added yet.</p>}</div></section>
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs"><div className="flex items-center justify-between gap-3"><div><h4 className="font-semibold text-slate-900">Addresses</h4><p className="mt-1 text-sm text-slate-600">Billing, shipping, and other locations.</p></div><Button size="sm" variant="outline" onClick={() => setAddressOpen((value) => !value)}>Add address</Button></div>{addressOpen && <form className="mt-5 grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2" onSubmit={addAddress}><Select label="Address type" value={addressType} onChange={(event) => setAddressType(event.target.value as typeof addressType)} options={[{ value: 'BILLING', label: 'Billing' }, { value: 'SHIPPING', label: 'Shipping' }, { value: 'OTHER', label: 'Other' }]} /><Input label="Country code" required maxLength={2} value={countryCode} onChange={(event) => setCountryCode(event.target.value.toUpperCase())} /><div className="sm:col-span-2"><Input label="Address line" required value={addressLine1} onChange={(event) => setAddressLine1(event.target.value)} /></div><Input label="City" required value={city} onChange={(event) => setCity(event.target.value)} /><div className="hidden sm:block" /><div className="sm:col-span-2 flex gap-2"><Button type="submit" isLoading={saving}>Save address</Button><Button type="button" variant="secondary" disabled={saving} onClick={() => setAddressOpen(false)}>Cancel</Button></div></form>}<div className="mt-5 divide-y divide-slate-100">{addresses.isPending && <p className="py-3 text-sm text-slate-600">Loading addresses…</p>}{addresses.data?.data.map((address) => <div key={address.id} className="py-3"><p className="font-medium text-slate-900">{address.addressType.toLowerCase()} address{address.isDefault && <span className="ml-2 text-xs font-medium text-indigo-600">Default</span>}</p><p className="mt-1 text-sm text-slate-600">{address.addressLine1}, {address.city}, {address.countryCode}</p></div>)}{addresses.isSuccess && !addresses.data.data.length && <p className="py-4 text-sm text-slate-600">No addresses added yet.</p>}</div></section>
         </div>
       )}
 

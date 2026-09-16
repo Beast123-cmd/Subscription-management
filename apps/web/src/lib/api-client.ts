@@ -142,6 +142,10 @@ class ApiClient {
   async getCustomer(id: string): Promise<Customer> {
     return this.request<Customer>(`/customers/${id}`);
   }
+  getCustomerContacts(id: string): Promise<{ data: Customer['contacts'] extends infer T ? NonNullable<T> : never }> { return this.request(`/customers/${id}/contacts`); }
+  createCustomerContact(id: string, input: { firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; isPrimary?: boolean }): Promise<unknown> { return this.request(`/customers/${id}/contacts`, { method: 'POST', body: JSON.stringify(input) }); }
+  getCustomerAddresses(id: string): Promise<{ data: Customer['addresses'] extends infer T ? NonNullable<T> : never }> { return this.request(`/customers/${id}/addresses`); }
+  createCustomerAddress(id: string, input: { addressType: 'BILLING' | 'SHIPPING' | 'OTHER'; addressLine1: string; city: string; countryCode: string; postalCode?: string; state?: string; isDefault?: boolean }): Promise<unknown> { return this.request(`/customers/${id}/addresses`, { method: 'POST', body: JSON.stringify(input) }); }
 
   // ==========================================
   // Catalog & Plans
