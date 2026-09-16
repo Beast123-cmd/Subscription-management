@@ -50,16 +50,16 @@ export class QuotationsService {
     });
   }
   async change(org: string, id: string, to: 'ISSUED' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED') {
-    const q = await this.find(org, id);
     const allowed: Record<string, string[]> = {
       DRAFT: ['ISSUED', 'CANCELLED'],
       ISSUED: ['ACCEPTED', 'REJECTED', 'CANCELLED'],
     };
-    if (!allowed[q.status]?.includes(to))
-      throw new ConflictException('Invalid quotation transition.');
-    return this.p.quotation.update({
-      where: { id },
-      data: { status: to, ...(to === 'ISSUED' ? { issueDate: new Date() } : {}) },
+    return this.p.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM quotations WHERE id = ${id}::uuid AND organization_id = ${org}::uuid FOR UPDATE`;
+      const quote = await tx.quotation.findFirst({ where: { id, organizationId: org }, select: { status: true } });
+      if (!quote) throw new NotFoundException('Quotation not found.');
+      if (!allowed[quote.status]?.includes(to)) throw new ConflictException('Invalid quotation transition.');
+      return tx.quotation.update({ where: { id }, data: { status: to, ...(to === 'ISSUED' ? { issueDate: new Date() } : {}) } });
     });
   }
   async convert(org: string, id: string, userId: string, input: Convert) {

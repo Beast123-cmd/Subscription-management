@@ -31,6 +31,7 @@ export class PaymentsService {
     return this.p.$transaction(async (tx) => {
       const existing = await tx.refund.findUnique({ where: { organizationId_idempotencyKey: { organizationId: o, idempotencyKey } } });
       if (existing) return existing;
+      await tx.$queryRaw`SELECT id FROM payments WHERE id = ${i.paymentId}::uuid AND organization_id = ${o}::uuid FOR UPDATE`;
       const payment = await tx.payment.findFirst({ where: { id: i.paymentId, organizationId: o, status: 'SUCCEEDED' } });
       if (!payment) throw new NotFoundException('Successful payment not found.');
       const amount = new Prisma.Decimal(i.amount);

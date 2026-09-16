@@ -76,7 +76,24 @@ export class PlansService {
   async addPrice(org: string, planId: string, input: Price) {
     await this.find(org, planId);
     this.validDates(input);
-    return this.prisma.planPrice.create({ data: { organizationId: org, planId, ...input } });
+    const effectiveFrom = new Date(input.effectiveFrom);
+    const effectiveUntil = input.effectiveUntil ? new Date(input.effectiveUntil) : null;
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM plans WHERE id = ${planId}::uuid AND organization_id = ${org}::uuid FOR UPDATE`;
+      const overlap = await tx.planPrice.findFirst({
+        where: {
+          organizationId: org,
+          planId,
+          currencyCode: input.currencyCode,
+          billingPeriod: input.billingPeriod,
+          status: 'ACTIVE',
+          ...(effectiveUntil ? { effectiveFrom: { lt: effectiveUntil } } : {}),
+          OR: [{ effectiveUntil: null }, { effectiveUntil: { gt: effectiveFrom } }],
+        },
+      });
+      if (overlap) throw new BadRequestException('An active price already covers this effective date range.');
+      return tx.planPrice.create({ data: { organizationId: org, planId, ...input } });
+    });
   }
   private validDates(input: {
     startsAt?: string | null;

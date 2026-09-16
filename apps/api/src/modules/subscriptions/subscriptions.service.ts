@@ -84,7 +84,6 @@ export class SubscriptionsService {
     to: 'CONFIRMED' | 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'RESUMED',
     reason?: string,
   ) {
-    const s = await this.find(org, id);
     const next = to === 'RESUMED' ? 'ACTIVE' : to;
     const allowed: Record<string, string[]> = {
       DRAFT: ['CONFIRMED'],
@@ -92,9 +91,12 @@ export class SubscriptionsService {
       ACTIVE: ['PAUSED', 'CANCELLED'],
       PAUSED: ['ACTIVE', 'CANCELLED'],
     };
-    if (!allowed[s.status]?.includes(next))
-      throw new ConflictException(`Cannot transition ${s.status} to ${next}.`);
     return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM subscriptions WHERE id = ${id}::uuid AND organization_id = ${org}::uuid FOR UPDATE`;
+      const s = await tx.subscription.findFirst({ where: { id, organizationId: org }, select: { status: true } });
+      if (!s) throw new NotFoundException('Subscription not found.');
+      if (!allowed[s.status]?.includes(next))
+        throw new ConflictException(`Cannot transition ${s.status} to ${next}.`);
       const updated = await tx.subscription.update({ where: { id }, data: { status: next } });
       await tx.subscriptionEvent.create({
         data: {

@@ -18,6 +18,10 @@ Run these checks against an isolated organization before release.
 - Switch organizations and verify lists/forms use only the selected organization's data.
 - Test validation and network failures: input remains visible and no success toast appears.
 - Confirm repeated payment/refund submissions do not create a duplicate record.
+- Submit concurrent refunds that together exceed the payment amount; exactly one must succeed.
+- Try adding overlapping active plan prices with the same currency and billing period; the second request must fail.
+- Attempt competing subscription and quotation transitions; only one valid state transition must persist.
+- Create an invitation, activate it once, then confirm the same link cannot activate a second account.
 
 ## Responsive and visual checks
 
