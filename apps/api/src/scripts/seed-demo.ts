@@ -5,6 +5,7 @@ if (process.env.DEMO_SEED_CONFIRM !== 'seed-demo-data')
   throw new Error('Set DEMO_SEED_CONFIRM=seed-demo-data to create demo records.');
 const password = process.env.DEMO_ADMIN_PASSWORD;
 if (!password || password.length < 12) throw new Error('DEMO_ADMIN_PASSWORD must contain at least 12 characters.');
+const passwordHash = await hash(password, 12);
 
 const prisma = new PrismaClient();
 const permissions = [
@@ -18,12 +19,26 @@ const permissions = [
 try {
   await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.upsert({ where: { slug: 'revops-demo' }, update: { status: 'ACTIVE' }, create: { name: 'RevOps Demo Workspace', slug: 'revops-demo', timezone: 'Asia/Kolkata', defaultCurrencyCode: 'INR' } });
-    const user = await tx.user.upsert({ where: { email: 'demo.admin@revops.test' }, update: { passwordHash: await hash(password, 12), status: 'ACTIVE' }, create: { email: 'demo.admin@revops.test', passwordHash: await hash(password, 12), firstName: 'Demo', lastName: 'Admin', status: 'ACTIVE' } });
+    const user = await tx.user.upsert({ where: { email: 'demo.admin@revops.test' }, update: { passwordHash, status: 'ACTIVE' }, create: { email: 'demo.admin@revops.test', passwordHash, firstName: 'Demo', lastName: 'Admin', status: 'ACTIVE' } });
     const membership = await tx.organizationMembership.upsert({ where: { organizationId_userId: { organizationId: organization.id, userId: user.id } }, update: { status: 'ACTIVE' }, create: { organizationId: organization.id, userId: user.id, status: 'ACTIVE' } });
-    const storedPermissions = await Promise.all(permissions.map(([resource, action]) => tx.permission.upsert({ where: { code: `${resource}.${action}` }, update: {}, create: { resource, action, code: `${resource}.${action}` } })));
+    await tx.permission.createMany({ data: permissions.map(([resource, action]) => ({ resource, action, code: `${resource}.${action}` })), skipDuplicates: true });
+    const storedPermissions = await tx.permission.findMany({ where: { code: { in: permissions.map(([resource, action]) => `${resource}.${action}`) } } });
+    const permissionId = new Map(storedPermissions.map((permission) => [permission.code, permission.id]));
     const admin = await tx.role.upsert({ where: { organizationId_code: { organizationId: organization.id, code: 'ADMIN' } }, update: { name: 'Admin', isSystem: true }, create: { organizationId: organization.id, name: 'Admin', code: 'ADMIN', description: 'Full demo access.', isSystem: true } });
-    await Promise.all(storedPermissions.map((permission) => tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: admin.id, permissionId: permission.id } }, update: {}, create: { roleId: admin.id, permissionId: permission.id } })));
+    await tx.rolePermission.createMany({ data: storedPermissions.map((permission) => ({ roleId: admin.id, permissionId: permission.id })), skipDuplicates: true });
     await tx.membershipRole.upsert({ where: { membershipId_roleId: { membershipId: membership.id, roleId: admin.id } }, update: {}, create: { organizationId: organization.id, membershipId: membership.id, roleId: admin.id } });
+    const roleFor = async (code: string, name: string, codes: string[]) => {
+      const role = await tx.role.upsert({ where: { organizationId_code: { organizationId: organization.id, code } }, update: { name }, create: { organizationId: organization.id, code, name, isSystem: true } });
+      await tx.rolePermission.createMany({ data: codes.map((code) => ({ roleId: role.id, permissionId: permissionId.get(code)! })), skipDuplicates: true });
+      return role;
+    };
+    const billing = await roleFor('BILLING_MANAGER', 'Billing Manager', ['organization.read', 'customer.read', 'customer.create', 'customer.update', 'product.read', 'plan.read', 'subscription.read', 'subscription.create', 'subscription.update', 'quotation.read', 'quotation.create', 'quotation.update', 'invoice.read', 'invoice.create', 'invoice.update', 'payment.read', 'payment.create', 'tax.read', 'discount.read']);
+    const viewer = await roleFor('READ_ONLY', 'Read-only', permissions.filter(([, action]) => action === 'read').map(([resource, action]) => `${resource}.${action}`));
+    for (const [email, firstName, lastName, role] of [['billing.manager@revops.test', 'Billing', 'Manager', billing], ['viewer@revops.test', 'Read', 'Only', viewer]] as const) {
+      const memberUser = await tx.user.upsert({ where: { email }, update: { passwordHash, status: 'ACTIVE' }, create: { email, passwordHash, firstName, lastName, status: 'ACTIVE' } });
+      const member = await tx.organizationMembership.upsert({ where: { organizationId_userId: { organizationId: organization.id, userId: memberUser.id } }, update: { status: 'ACTIVE' }, create: { organizationId: organization.id, userId: memberUser.id, status: 'ACTIVE' } });
+      await tx.membershipRole.upsert({ where: { membershipId_roleId: { membershipId: member.id, roleId: role.id } }, update: {}, create: { organizationId: organization.id, membershipId: member.id, roleId: role.id } });
+    }
 
     await tx.tax.upsert({ where: { organizationId_name: { organizationId: organization.id, name: 'GST 18%' } }, update: { status: 'ACTIVE', rate: '18' }, create: { organizationId: organization.id, name: 'GST 18%', rate: '18' } });
     await tx.discount.upsert({ where: { organizationId_name: { organizationId: organization.id, name: 'Launch discount' } }, update: { status: 'ACTIVE', rate: '10' }, create: { organizationId: organization.id, name: 'Launch discount', rate: '10' } });

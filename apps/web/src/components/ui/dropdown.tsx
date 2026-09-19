@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 export interface DropdownItem {
@@ -35,10 +36,19 @@ export function Dropdown({
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ left: 0, top: 0 });
+
+  const open = () => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) setPosition({ left: align === 'right' ? rect.right : rect.left, top: rect.bottom + 6 });
+    setIsOpen((value) => !value);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (!dropdownRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
@@ -52,17 +62,18 @@ export function Dropdown({
 
   return (
     <div ref={dropdownRef} className={cn('relative inline-block text-left', className)}>
-      <div onClick={() => setIsOpen((prev) => !prev)} className="cursor-pointer">
+      <div ref={triggerRef} onClick={open} className="cursor-pointer">
         {trigger}
       </div>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div
+          ref={menuRef}
           className={cn(
-            'absolute z-50 mt-1.5 rounded-lg border border-slate-200 bg-white p-1 shadow-lg animate-in fade-in zoom-in-95 duration-100',
-            align === 'right' ? 'right-0' : 'left-0',
+            'fixed z-50 rounded-lg border border-slate-200 bg-white p-1 shadow-lg animate-in fade-in zoom-in-95 duration-100',
             width
           )}
+          style={{ left: position.left, top: position.top, transform: align === 'right' ? 'translateX(-100%)' : undefined }}
         >
           {children ? (
             <div onClick={() => setIsOpen(false)}>{children}</div>
@@ -105,7 +116,7 @@ export function Dropdown({
             ))
           )}
         </div>
-      )}
+      , document.body)}
     </div>
   );
 }
